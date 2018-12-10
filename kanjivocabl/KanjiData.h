@@ -1,7 +1,6 @@
 #ifndef KANJI_DATA_HPP
 #define KANJI_DATA_HPP
 
-#include <string>
 #include <vector>
 #include <istream>
 
@@ -14,12 +13,13 @@ namespace kanji_data
 	class kanji_compound {
 	public:
 		using kanji_id = std::uint_least32_t;
+		using kanji_level = std::int_least32_t;
 
-		kanji_compound(std::wstring k_str, std::string reading, std::string meaning, const kanji_id id, const std::int_least16_t level, time last_rep) :
+		kanji_compound(std::wstring k_str, std::wstring reading, std::wstring meaning, const kanji_id id, const kanji_level level, time last_rep) :
 			reading{ std::move(reading) }, meaning{ std::move(meaning) }, id_valid_(true),
 			id_(id), kanji_str_{ std::move(k_str) }, last_rep_{ last_rep }, level_{ level } {}
 
-		kanji_compound(std::wstring k_str, std::string reading, std::string meaning) :
+		kanji_compound(std::wstring k_str, std::wstring reading, std::wstring meaning) :
 			reading{ std::move(reading) }, meaning{ std::move(meaning) }, id_valid_(false),
 			id_(0), kanji_str_{ std::move(k_str) }, level_{ 1 }
 		{
@@ -29,24 +29,24 @@ namespace kanji_data
 		void repeat(bool succeeded);
 		void reset_time();
 
-		std::string reading;
-		std::string meaning;
+		std::wstring reading;
+		std::wstring meaning;
 
 		kanji_id get_id() const { return id_; }
 		bool id_valid() const { return id_valid_; }
 
 		const std::wstring &get_kanji() const { return kanji_str_; }
 		time get_last_rep() const { return last_rep_; }
-		std::int_least16_t get_level() const { return level_; }
+		kanji_level get_level() const { return level_; }
 	private:
 		bool id_valid_;
 
 		kanji_id id_;
 		std::wstring kanji_str_;
 
-		static const std::int_least16_t max_level = 32;
+		static const kanji_level max_level = 32;
 		time last_rep_;
-		std::int_least16_t level_;
+		kanji_level level_;
 	};
 
 	class kanji_lib {
@@ -56,7 +56,7 @@ namespace kanji_data
 		std::vector<kanji_compound> &get_kanji() { return kanji_; };
 		const std::vector<kanji_compound> &get_kanji() const { return kanji_; };
 
-		void add_kanji(std::wstring kanji_str, std::string reading, std::string meaning);
+		void add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning);
 		void update_kanji(kanji_compound kanji);
 		void delete_kanji(kanji_compound::kanji_id id);
 		void reset_time();
@@ -66,11 +66,12 @@ namespace kanji_data
 	};
 
 	std::vector<kanji_compound> by_kanji(const kanji_lib &lib, wchar_t k);
-	std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::string &m);
-	std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::string &r);
+	std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::wstring &m);
+	std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r);
 	std::vector<kanji_compound> due_today(const kanji_lib &lib);
 
-	kanji_lib read_lib(std::istream &is);	
+	kanji_lib read_lib(std::wistream &is);
+	void write_lib(const kanji_lib &lib, std::wostream &wos);
 }
 
 #endif // !KANJI_DATA_HPP
