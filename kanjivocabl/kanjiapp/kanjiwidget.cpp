@@ -1,33 +1,42 @@
 #include "kanjiwidget.h"
 #include "ui_kanjiwidget.h"
 
-#include "detailswidget.h"
-
 #include <QStackedLayout>
+#include <QPushButton>
 
-KanjiWidget::KanjiWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::KanjiWidget)
+KanjiWidget::KanjiWidget(QStackedWidget *st, QWidget *parent) : QWidget(parent),
+    widgetCount(0), ui(new Ui::KanjiWidget)
 {
     ui->setupUi(this);
+
+    pageStack = st;
+    setupLayout();
 }
 
-KanjiWidget::~KanjiWidget()
-{
+KanjiWidget::~KanjiWidget() {
     delete ui;
 }
 
-void KanjiWidget::on_train_button_clicked()
-{
-
+void KanjiWidget::setupLayout() {
+    l = new QGridLayout();
+    setLayout(l);
 }
 
-void KanjiWidget::on_list_button_clicked()
-{
+int KanjiWidget::addWidget(const QString &name, QWidget *widget, const QIcon *icon) {
+    QPushButton *b = new QPushButton(name);
 
+    l->addWidget(b, widgetCount / 2, widgetCount % 2);
+    widgetCount++;
+
+    int id = pageStack->count();
+
+    // signal a particular button being clicked
+    connect(b, &QPushButton::clicked, this, [=](){
+        emit pageButtonClicked(id);
+    });
+
+    pageStack->addWidget(widget);
+
+    return id;
 }
 
-void KanjiWidget::on_pushButton_clicked()
-{
-
-}

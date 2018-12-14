@@ -16,15 +16,27 @@
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>260</x>
+     <x>200</x>
      <y>20</y>
      <width>231</width>
      <height>421</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="detail_layout">
+   <layout class="QVBoxLayout" name="detail_layout" stretch="0,0,0,0">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="sizeConstraint">
+     <enum>QLayout::SetMaximumSize</enum>
+    </property>
     <item>
      <widget class="QLabel" name="label">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Kanji text</string>
       </property>
@@ -35,6 +47,12 @@
     </item>
     <item>
      <widget class="QLabel" name="label_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Reading</string>
       </property>
@@ -43,20 +61,54 @@
     <item>
      <widget class="QLineEdit" name="reading_edit"/>
     </item>
-    <item>
-     <widget class="QLabel" name="label_3">
+   </layout>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>20</y>
+     <width>221</width>
+     <height>421</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0">
+    <property name="verticalSpacing">
+     <number>6</number>
+    </property>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="confirm_button">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
-       <string>Meaning</string>
+       <string>Confirm</string>
       </property>
      </widget>
     </item>
-    <item>
-     <widget class="QLineEdit" name="meaning_edit"/>
+    <item row="2" column="0">
+     <widget class="QLineEdit" name="meaning_edit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </item>
-    <item>
-     <widget class="QPushButton" name="confirm_button">
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
-       <string>Confirm</string>
+       <string>Meaning</string>
       </property>
      </widget>
     </item>

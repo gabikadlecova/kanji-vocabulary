@@ -12,13 +12,3 @@ DetailsWidget::~DetailsWidget()
 {
     delete ui;
 }
-
-void DetailsWidget::on_edit_button_clicked()
-{
-
-}
-
-void DetailsWidget::on_reset_button_clicked()
-{
-
-}

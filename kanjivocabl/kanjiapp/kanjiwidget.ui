@@ -13,39 +13,6 @@
   <property name="windowTitle">
    <string>KanjiWidget</string>
   </property>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>20</y>
-     <width>391</width>
-     <height>411</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="detail_layout">
-    <item>
-     <widget class="QPushButton" name="train_button">
-      <property name="text">
-       <string>Train</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="list_button">
-      <property name="text">
-       <string>All words</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton">
-      <property name="text">
-       <string>Settings</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
