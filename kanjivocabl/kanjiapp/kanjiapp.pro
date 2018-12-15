@@ -32,7 +32,16 @@ SOURCES += \
     trainwidget.cpp \
     kanjilistwidget.cpp \
     trainflipwidget.cpp \
-    mainwidget.cpp
+    mainwidget.cpp \
+    kanjiapp/KanjiData.cpp \
+    detailswidget.cpp \
+    editwidget.cpp \
+    kanjilistwidget.cpp \
+    kanjiwidget.cpp \
+    main.cpp \
+    mainwidget.cpp \
+    trainflipwidget.cpp \
+    trainwidget.cpp
 
 HEADERS += \
         kanjiwidget.h \
@@ -41,7 +50,15 @@ HEADERS += \
     trainwidget.h \
     kanjilistwidget.h \
     trainflipwidget.h \
-    mainwidget.h
+    mainwidget.h \
+    kanjiapp/KanjiData.h \
+    detailswidget.h \
+    editwidget.h \
+    kanjilistwidget.h \
+    kanjiwidget.h \
+    mainwidget.h \
+    trainflipwidget.h \
+    trainwidget.h
 
 FORMS += \
         kanjiwidget.ui \
