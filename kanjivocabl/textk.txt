@@ -1,3 +1,0 @@
-日;hi;sun;0;2
-飛行機;hikouki;plane;0;4
-友達;tomodachi;friend;0;32

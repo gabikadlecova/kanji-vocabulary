@@ -16,9 +16,9 @@ public:
     ~DetailsWidget();
 
 private slots:
-    void on_edit_button_clicked();
+    void onEditButtonClicked();
 
-    void on_reset_button_clicked();
+    void onResetButtonClicked();
 
 private:
     Ui::DetailsWidget *ui;
