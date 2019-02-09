@@ -1,4 +1,4 @@
-#include <QStackedLayout>
+#include <QVBoxLayout>
 #include <QLabel>
 
 #include "detailswidget.h"
@@ -29,7 +29,7 @@ void DetailsWidget::onKanjiChanged(kcomp &kc) {
 }
 
 void DetailsWidget::setupLayout() {
-    auto l = new QStackedLayout();
+    auto l = new QVBoxLayout();
 
     QLabel *kanji_l = new QLabel();
     connect(this, &DetailsWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
