@@ -2,8 +2,14 @@
 #define MAINWIDGET_H
 
 #include <QWidget>
+#include <QStack>
+#include <QVector>
 #include <QSplitter>
 #include <QStackedWidget>
+
+#include "kanjiwidget.h"
+#include "kanjilistwidget.h"
+#include "kanjiapp/KanjiData.h"
 
 namespace Ui {
 class MainWidget;
@@ -13,7 +19,8 @@ class MainWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MainWidget(QWidget *parent = nullptr);
+    explicit MainWidget(QVector<kanji_data::kanji_compound> kanji,
+                        QWidget *parent = nullptr);
     ~MainWidget();
 
 signals:
@@ -32,7 +39,9 @@ private:
 
     QSplitter *menuSplitter;
     QStackedWidget *pageStack;
+    KanjiListWidget *kanjiList;
 
+    QStack<int> *idStack;
     Ui::MainWidget *ui;
 };
 

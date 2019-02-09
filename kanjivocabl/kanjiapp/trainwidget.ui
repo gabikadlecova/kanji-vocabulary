@@ -13,32 +13,6 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>10</y>
-     <width>271</width>
-     <height>461</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="detail_layout">
-    <item>
-     <widget class="QLabel" name="kanji_label">
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="flip_button">
-      <property name="text">
-       <string>PushButton</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
  </widget>
  <resources/>
  <connections/>

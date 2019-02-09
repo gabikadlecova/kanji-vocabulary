@@ -1,7 +1,6 @@
 #include "kanjiwidget.h"
 #include "ui_kanjiwidget.h"
 
-#include <QStackedLayout>
 #include <QPushButton>
 
 KanjiWidget::KanjiWidget(QStackedWidget *st, QWidget *parent) : QWidget(parent),
@@ -23,7 +22,7 @@ void KanjiWidget::setupLayout() {
 }
 
 int KanjiWidget::addWidget(const QString &name, QWidget *widget, const QIcon *icon) {
-    QPushButton *b = new QPushButton(name);
+    QPushButton *b = icon == nullptr ? new QPushButton(name) : new QPushButton(*icon, name);
 
     l->addWidget(b, widgetCount / 2, widgetCount % 2);
     widgetCount++;

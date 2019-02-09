@@ -2,13 +2,21 @@
 #include "ui_mainwidget.h"
 
 #include "kanjiwidget.h"
+#include "kanjilistwidget.h"
+
 #include "detailswidget.h"
 #include "editwidget.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
 
-MainWidget::MainWidget(QWidget *parent) : QWidget(parent), ui(new Ui::MainWidget) {
+MainWidget::MainWidget(QVector<kanji_data::kanji_compound> kanji,
+                       QWidget *parent) :
+    QWidget(parent),
+    kanjiList(new KanjiListWidget(std::move(kanji))),
+    idStack(new QStack<int>()),
+    ui(new Ui::MainWidget)
+{
     ui->setupUi(this);
     setupLayout();
 }
@@ -20,11 +28,15 @@ MainWidget::~MainWidget() {
 void MainWidget::pageChanged(int pageId) {
     pageStack->setCurrentIndex(pageId);
 
+    idStack->push(pageId);
+
     emit page_opened();
 }
 
 void MainWidget::homeButtonClicked() {
     pageStack->setCurrentIndex(0);
+    idStack->clear();
+    idStack->push(0);
 
     emit home_opened();
 }
@@ -35,12 +47,15 @@ void MainWidget::backButtonClicked() {
         return;
     }
 
-    if (currId - 1 == 0) {
+    idStack->pop();
+    int nextId = idStack->top();
+
+    if (nextId == 0) {
         homeButtonClicked();
         return;
     }
+    pageStack->setCurrentIndex(nextId);
 
-    pageStack->setCurrentIndex(currId - 1);
 }
 
 void MainWidget::setupLayout() {
@@ -91,12 +106,26 @@ void MainWidget::setupMenu() {
 void MainWidget::setupPage() {
     pageStack = new QStackedWidget();
 
-    auto kw = new KanjiWidget(pageStack);
-    pageStack->addWidget(kw);
+    auto kv = new KanjiWidget(pageStack);
+    pageStack->addWidget(kv);
+    idStack->push(0);
 
-    connect(kw, &KanjiWidget::pageButtonClicked, this, &MainWidget::pageChanged);
+    // tile page setup
+    connect(kv, &KanjiWidget::pageButtonClicked, this, &MainWidget::pageChanged);
 
-    //todo remove
-    kw->addWidget("detail", new DetailsWidget());
-    kw->addWidget("edit", new EditWidget());
+    // TODO could be defined elsewhere (separate function...)
+
+    // kanji list setup
+    connect(kanjiList, &KanjiListWidget::kanjiPageOpened, this, &MainWidget::pageChanged);
+    kv->addWidget("Kanji list", kanjiList);
+
+    // connect list to kanji detail
+    auto dw = new DetailsWidget();
+    kanjiList->kanjiPageId = pageStack->count();
+    pageStack->addWidget(dw);
+
+    connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
+            dw, &DetailsWidget::onKanjiChanged);
+
+    // TODO connect detail and edit
 }

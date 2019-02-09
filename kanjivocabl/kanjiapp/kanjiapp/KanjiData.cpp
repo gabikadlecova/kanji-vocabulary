@@ -57,21 +57,21 @@ void kanji_data::kanji_lib::delete_kanji(kanji_compound::kanji_id id) {
 
 std::vector<kanji_data::kanji_compound> kanji_data::by_kanji(const kanji_lib &lib, wchar_t k) {
 	std::vector<kanji_compound> kanji_k;
-	std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.get_kanji().find(k) >= 0; });
+    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.get_kanji().find(k) == std::wstring::npos; });
 
 	return kanji_k;
 }
 
 std::vector<kanji_data::kanji_compound> kanji_data::by_meaning(const kanji_lib &lib, const std::wstring &m) {
 	std::vector<kanji_compound> kanji_k;
-	std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.meaning.find(m) >= 0; });
+    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.meaning.find(m) == std::wstring::npos; });
 
 	return kanji_k;
 }
 
 std::vector<kanji_data::kanji_compound> kanji_data::by_reading(const kanji_lib &lib, const std::wstring &r) {
 	std::vector<kanji_compound> kanji_k;
-	std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.meaning.find(r) >= 0; });
+    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(), std::back_inserter(kanji_k), [&](const kanji_compound &kc) {return kc.meaning.find(r) == std::wstring::npos; });
 
 	return kanji_k;
 }

@@ -15,6 +15,12 @@ namespace kanji_data
 		using kanji_id = std::uint_least32_t;
 		using kanji_level = std::int_least32_t;
 
+        kanji_compound():reading{L""}, meaning{L""}, id_valid_(true),
+            id_(0), kanji_str_{ L"" },  level_{ 0 }
+        {
+            last_rep_ = std::chrono::system_clock::now();
+        }
+
 		kanji_compound(std::wstring k_str, std::wstring reading, std::wstring meaning, const kanji_id id, const kanji_level level, time last_rep) :
 			reading{ std::move(reading) }, meaning{ std::move(meaning) }, id_valid_(true),
 			id_(id), kanji_str_{ std::move(k_str) }, last_rep_{ last_rep }, level_{ level } {}
@@ -51,10 +57,10 @@ namespace kanji_data
 
 	class kanji_lib {
 	public:
-		kanji_lib(std::vector<kanji_compound> kanji, const kanji_compound::kanji_id id) : max_id_(id), kanji_(std::move(kanji)) {};
+        kanji_lib(std::vector<kanji_compound> kanji, const kanji_compound::kanji_id id) : max_id_(id), kanji_(std::move(kanji)) {}
 
-		std::vector<kanji_compound> &get_kanji() { return kanji_; };
-		const std::vector<kanji_compound> &get_kanji() const { return kanji_; };
+        std::vector<kanji_compound> &get_kanji() { return kanji_; }
+        const std::vector<kanji_compound> &get_kanji() const { return kanji_; }
 
 		void add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning);
 		void update_kanji(kanji_compound kanji);

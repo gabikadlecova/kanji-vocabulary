@@ -2,6 +2,7 @@
 #define DETAILSWIDGET_H
 
 #include <QWidget>
+#include "kanjiapp/KanjiData.h"
 
 namespace Ui {
 class DetailsWidget;
@@ -10,17 +11,26 @@ class DetailsWidget;
 class DetailsWidget : public QWidget
 {
     Q_OBJECT
+    using kcomp = kanji_data::kanji_compound;
 
 public:
     explicit DetailsWidget(QWidget *parent = nullptr);
     ~DetailsWidget();
 
-private slots:
-    void onEditButtonClicked();
+signals:
+    void kanjiTextChanged(const QString &text);
+    void kanjiReadingChanged(const QString &text);
+    void kanjiMeaningChanged(const QString &text);
+    void kanjiLevelChanged(kcomp::kanji_level level);
 
-    void onResetButtonClicked();
+public slots:
+    void onKanjiChanged(kcomp &kc);
 
 private:
+    void setupLayout();
+
+    kcomp *curr_kanji;
+
     Ui::DetailsWidget *ui;
 };
 
