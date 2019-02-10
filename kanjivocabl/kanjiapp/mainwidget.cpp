@@ -10,14 +10,16 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-MainWidget::MainWidget(QVector<kanji_data::kanji_compound> kanji,
+MainWidget::MainWidget(kanji_data::kanji_lib lib,
                        QWidget *parent) :
     QWidget(parent),
-    kanjiList(new KanjiListWidget(std::move(kanji))),
+    lib(lib),
     idStack(new QStack<int>()),
     ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
+    kanji_v = QVector<kanji_data::kanji_compound>::fromStdVector(lib.get_kanji());
+
     setupLayout();
 }
 
@@ -25,23 +27,23 @@ MainWidget::~MainWidget() {
     delete ui;
 }
 
-void MainWidget::pageChanged(int pageId) {
+void MainWidget::onPageChanged(int pageId) {
     pageStack->setCurrentIndex(pageId);
 
     idStack->push(pageId);
 
-    emit page_opened();
+    emit pageOpened();
 }
 
-void MainWidget::homeButtonClicked() {
+void MainWidget::onHomeButtonClicked() {
     pageStack->setCurrentIndex(0);
     idStack->clear();
     idStack->push(0);
 
-    emit home_opened();
+    emit homeOpened();
 }
 
-void MainWidget::backButtonClicked() {
+void MainWidget::onBackButtonClicked() {
     const int currId = pageStack->currentIndex();
     if (currId == 0) {
         return;
@@ -51,11 +53,20 @@ void MainWidget::backButtonClicked() {
     int nextId = idStack->top();
 
     if (nextId == 0) {
-        homeButtonClicked();
+        onHomeButtonClicked();
         return;
     }
     pageStack->setCurrentIndex(nextId);
 
+}
+
+void MainWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
+{
+    // erase from lib only here
+    lib.delete_kanji(id);
+
+    // todo go back somewhere...
+    onBackButtonClicked();
 }
 
 void MainWidget::setupLayout() {
@@ -88,14 +99,14 @@ void MainWidget::setupMenu() {
 
     QPushButton *homeButton = new QPushButton("Home");
     menuSplitter->addWidget(homeButton);
-    connect(homeButton, &QPushButton::clicked, this, &MainWidget::homeButtonClicked);
+    connect(homeButton, &QPushButton::clicked, this, &MainWidget::onHomeButtonClicked);
 
     QPushButton *backButton = new QPushButton("Back");
     menuSplitter->addWidget(backButton);
 
-    connect(backButton, &QPushButton::clicked, this, &MainWidget::backButtonClicked);
-    connect(this, &MainWidget::page_opened, backButton, &QPushButton::show);
-    connect(this, &MainWidget::home_opened, backButton, &QPushButton::hide);
+    connect(backButton, &QPushButton::clicked, this, &MainWidget::onBackButtonClicked);
+    connect(this, &MainWidget::pageOpened, backButton, &QPushButton::show);
+    connect(this, &MainWidget::homeOpened, backButton, &QPushButton::hide);
 
     backButton->hide();
 
@@ -111,21 +122,39 @@ void MainWidget::setupPage() {
     idStack->push(0);
 
     // tile page setup
-    connect(kv, &KanjiWidget::pageButtonClicked, this, &MainWidget::pageChanged);
+    connect(kv, &KanjiWidget::pageButtonClicked, this, &MainWidget::onPageChanged);
 
     // TODO could be defined elsewhere (separate function...)
 
     // kanji list setup
-    connect(kanjiList, &KanjiListWidget::kanjiPageOpened, this, &MainWidget::pageChanged);
+    auto kanjiList = new KanjiListWidget(kanji_v);
+
+    connect(kanjiList, &KanjiListWidget::kanjiPageOpened, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
 
     // connect list to kanji detail
+    int kanjiId = pageStack->count();
+
     auto dw = new DetailsWidget();
-    kanjiList->kanjiPageId = pageStack->count();
+    kanjiList->kanjiPageId = kanjiId;
     pageStack->addWidget(dw);
 
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
             dw, &DetailsWidget::onKanjiChanged);
 
-    // TODO connect detail and edit
+    // connect detail to edit
+    auto ew = new EditWidget();
+    dw->editPageId = pageStack->count();
+    pageStack->addWidget(ew);
+
+    connect(dw, &DetailsWidget::editPageOpened,
+            this, &MainWidget::onPageChanged);
+
+    // connect - kanji deletion
+    connect(dw, &DetailsWidget::kanjiDeleted,
+            this, &MainWidget::onKanjiDeleted);
+    connect(dw, &DetailsWidget::kanjiDeleted,
+            kanjiList, &KanjiListWidget::onKanjiDeleted);
+
+    // TODO connect edit to detail to go back
 }

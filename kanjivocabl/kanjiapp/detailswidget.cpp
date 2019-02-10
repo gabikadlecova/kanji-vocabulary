@@ -1,5 +1,5 @@
-#include <QVBoxLayout>
 #include <QLabel>
+#include <QPushButton>
 
 #include "detailswidget.h"
 #include "ui_detailswidget.h"
@@ -11,6 +11,7 @@ DetailsWidget::DetailsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    editPageId = -1;
     setupLayout();
 }
 
@@ -19,7 +20,8 @@ DetailsWidget::~DetailsWidget()
     delete ui;
 }
 
-void DetailsWidget::onKanjiChanged(kcomp &kc) {
+void DetailsWidget::onKanjiChanged(const kcomp &kc)
+{
     curr_kanji = &kc;
 
     emit kanjiTextChanged(QString::fromWCharArray(kc.get_kanji().c_str()));
@@ -28,9 +30,29 @@ void DetailsWidget::onKanjiChanged(kcomp &kc) {
     emit kanjiLevelChanged(kc.get_level());
 }
 
-void DetailsWidget::setupLayout() {
-    auto l = new QVBoxLayout();
+void DetailsWidget::onEditRequested()
+{
+    // todo connect to edit
+    emit editPageOpened(editPageId);
+}
 
+void DetailsWidget::onKanjiDeleted()
+{
+    emit kanjiDeleted(curr_kanji->get_id());
+}
+
+void DetailsWidget::setupLayout()
+{
+    l = new QVBoxLayout();
+
+    setupKanjiData();
+    setupButtons();
+
+    setLayout(l);
+}
+
+void DetailsWidget::setupKanjiData()
+{
     QLabel *kanji_l = new QLabel();
     connect(this, &DetailsWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
 
@@ -46,6 +68,19 @@ void DetailsWidget::setupLayout() {
     l->addWidget(reading_l);
     l->addWidget(meaning_l);
     // TODO add level
+}
 
-    setLayout(l);
+void DetailsWidget::setupButtons()
+{
+    // edit
+    QPushButton *editButton = new QPushButton("Edit");
+    l->addWidget(editButton);
+
+    connect(editButton, &QPushButton::clicked, this, &DetailsWidget::onEditRequested);
+
+    // delete
+    QPushButton *deleteButton = new QPushButton("Delete");
+    l->addWidget(deleteButton);
+
+    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onKanjiDeleted);
 }

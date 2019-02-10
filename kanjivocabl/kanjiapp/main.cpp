@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     wis.close();
 
 
-    MainWidget w(QVector<kanji_data::kanji_compound>::fromStdVector(lib.get_kanji()));
+    MainWidget w(lib);
 
     w.show();
 

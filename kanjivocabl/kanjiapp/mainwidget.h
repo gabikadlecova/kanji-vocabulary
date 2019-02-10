@@ -19,29 +19,33 @@ class MainWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MainWidget(QVector<kanji_data::kanji_compound> kanji,
+    explicit MainWidget(kanji_data::kanji_lib lib,
                         QWidget *parent = nullptr);
     ~MainWidget();
 
 signals:
-    void page_opened();
-    void home_opened();
+    void pageOpened();
+    void homeOpened();
 
 private slots:
-    void pageChanged(int pageId);
-    void homeButtonClicked();
-    void backButtonClicked();
+    void onPageChanged(int pageId);
+    void onHomeButtonClicked();
+    void onBackButtonClicked();
+
+    void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
 
 private:
     void setupLayout();
     void setupMenu();
     void setupPage();
 
+    kanji_data::kanji_lib lib;
+    QVector<kanji_data::kanji_compound> kanji_v;
+
     QSplitter *menuSplitter;
     QStackedWidget *pageStack;
-    KanjiListWidget *kanjiList;
-
     QStack<int> *idStack;
+
     Ui::MainWidget *ui;
 };
 

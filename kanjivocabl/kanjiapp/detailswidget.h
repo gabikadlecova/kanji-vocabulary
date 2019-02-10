@@ -2,6 +2,8 @@
 #define DETAILSWIDGET_H
 
 #include <QWidget>
+#include <QVBoxLayout>
+
 #include "kanjiapp/KanjiData.h"
 
 namespace Ui {
@@ -16,6 +18,7 @@ class DetailsWidget : public QWidget
 public:
     explicit DetailsWidget(QWidget *parent = nullptr);
     ~DetailsWidget();
+    int editPageId;
 
 signals:
     void kanjiTextChanged(const QString &text);
@@ -23,13 +26,21 @@ signals:
     void kanjiMeaningChanged(const QString &text);
     void kanjiLevelChanged(kcomp::kanji_level level);
 
+    void editPageOpened(int pageId);
+    void kanjiDeleted(kcomp::kanji_id kanjiId);
+
 public slots:
-    void onKanjiChanged(kcomp &kc);
+    void onKanjiChanged(const kcomp &kc);
+    void onEditRequested();
+    void onKanjiDeleted();
 
 private:
     void setupLayout();
+    void setupKanjiData();
+    void setupButtons();
 
-    kcomp *curr_kanji;
+    QVBoxLayout *l;
+    const kcomp *curr_kanji;
 
     Ui::DetailsWidget *ui;
 };

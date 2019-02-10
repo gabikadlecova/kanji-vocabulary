@@ -4,7 +4,7 @@
 #include <QGridLayout>
 
 
-KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> kanji,
+KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
                                  QWidget *parent) :
     QWidget(parent),
     ui(new Ui::KanjiListWidget)
@@ -35,17 +35,24 @@ void KanjiListWidget::setupLayout()
     setLayout(l);
 }
 
+void KanjiListWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
+{
+    int row = model->getKanjiRow(id);
+
+    model->removeRows(row, 1);
+}
+
 void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 {
-    auto kc = model->get_kanji(index);
+    auto &&kc = model->getKanji(index);
 
     // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
     emit kanjiPageOpened(kanjiPageId);
 }
 
-KanjiListModel::KanjiListModel(QVector<kanji_compound> kanji, QObject *parent) :
-    QAbstractListModel(parent), kanji(std::move(kanji)) {}
+KanjiListModel::KanjiListModel(QVector<kanji_compound> &kanji, QObject *parent) :
+    QAbstractListModel(parent), kanji(kanji) {}
 
 
 int KanjiListModel::rowCount(const QModelIndex &parent) const
@@ -67,9 +74,28 @@ QVariant KanjiListModel::data(const QModelIndex &index, int role) const
     }
 }
 
-kanji_data::kanji_compound &KanjiListModel::get_kanji(const QModelIndex &ind) {
-    // TODO check
+const kanji_data::kanji_compound &KanjiListModel::getKanji(const QModelIndex &ind) const
+{
     return kanji[ind.row()];
 }
 
+int KanjiListModel::getKanjiRow(kanji_compound::kanji_id id)
+{
+    auto it = std::find_if(kanji.begin(), kanji.end(), [=](kanji_compound kc) {
+        return kc.get_id() == id;
+    });
+
+    // QVector size limitation
+    int d =  std::distance(kanji.begin(), it);
+    return d;
+}
+
+bool KanjiListModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    beginRemoveRows(parent, row, row + count - 1);
+    kanji.erase(kanji.begin() + row, kanji.begin() + row + count);
+
+    endRemoveRows();
+    return true;
+}
 //todo listview, connect signals as to actualize list
