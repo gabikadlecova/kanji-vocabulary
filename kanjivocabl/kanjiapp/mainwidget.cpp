@@ -69,6 +69,14 @@ void MainWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
     onBackButtonClicked();
 }
 
+void MainWidget::onKanjiChanged(kanji_data::kanji_compound &kc)
+{
+    lib.update_kanji(kc);
+
+    // TODO go back?
+    onBackButtonClicked();
+}
+
 void MainWidget::setupLayout() {
     QVBoxLayout *l = new QVBoxLayout();
 
@@ -133,10 +141,10 @@ void MainWidget::setupPage() {
     kv->addWidget("Kanji list", kanjiList);
 
     // connect list to kanji detail
-    int kanjiId = pageStack->count();
+    int detailId = pageStack->count();
 
     auto dw = new DetailsWidget();
-    kanjiList->kanjiPageId = kanjiId;
+    kanjiList->detailPageId = detailId;
     pageStack->addWidget(dw);
 
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
@@ -147,6 +155,7 @@ void MainWidget::setupPage() {
     dw->editPageId = pageStack->count();
     pageStack->addWidget(ew);
 
+
     connect(dw, &DetailsWidget::editPageOpened,
             this, &MainWidget::onPageChanged);
 
@@ -155,6 +164,16 @@ void MainWidget::setupPage() {
             this, &MainWidget::onKanjiDeleted);
     connect(dw, &DetailsWidget::kanjiDeleted,
             kanjiList, &KanjiListWidget::onKanjiDeleted);
+
+    // edit page connects
+    connect(ew, &EditWidget::kanjiChanged,
+            dw, &DetailsWidget::onKanjiChanged);
+    connect(ew, &EditWidget::kanjiChanged,
+            this, &MainWidget::onKanjiChanged);
+
+    connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
+            ew, &EditWidget::onKanjiChanged);
+
 
     // TODO connect edit to detail to go back
 }

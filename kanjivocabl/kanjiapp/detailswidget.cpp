@@ -20,7 +20,7 @@ DetailsWidget::~DetailsWidget()
     delete ui;
 }
 
-void DetailsWidget::onKanjiChanged(const kcomp &kc)
+void DetailsWidget::onKanjiChanged(kcomp &kc)
 {
     curr_kanji = &kc;
 
@@ -68,19 +68,22 @@ void DetailsWidget::setupKanjiData()
     l->addWidget(reading_l);
     l->addWidget(meaning_l);
     // TODO add level
+
 }
 
 void DetailsWidget::setupButtons()
 {
     // edit
     QPushButton *editButton = new QPushButton("Edit");
-    l->addWidget(editButton);
-
     connect(editButton, &QPushButton::clicked, this, &DetailsWidget::onEditRequested);
 
     // delete
     QPushButton *deleteButton = new QPushButton("Delete");
+    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onKanjiDeleted);
+
+    // TODO reset button
+
+    l->addWidget(editButton);
     l->addWidget(deleteButton);
 
-    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onKanjiDeleted);
 }

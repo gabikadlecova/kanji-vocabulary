@@ -3,6 +3,11 @@
 
 #include <QWidget>
 
+#include <QVBoxLayout>
+#include <QLineEdit>
+
+#include "kanjiapp/KanjiData.h"
+
 namespace Ui {
 class EditWidget;
 }
@@ -10,15 +15,34 @@ class EditWidget;
 class EditWidget : public QWidget
 {
     Q_OBJECT
+    using kcomp = kanji_data::kanji_compound;
 
 public:
     explicit EditWidget(QWidget *parent = nullptr);
     ~EditWidget();
 
-private slots:
-    void on_confirm_button_clicked();
+signals:
+    void kanjiTextChanged(const QString &text);
+    void kanjiReadingChanged(const QString &text);
+    void kanjiMeaningChanged(const QString &text);
+
+    void kanjiChanged(kcomp &kanji);
+
+public slots:
+    void onKanjiChanged(kcomp &kc);
+    void onSaveRequested();
 
 private:
+    void setupLayout();
+    void setupKanjiData();
+    void setupButtons();
+
+    QVBoxLayout *l;
+    kcomp *curr_kanji;
+
+    QLineEdit *reading_l;
+    QLineEdit *meaning_l;
+
     Ui::EditWidget *ui;
 };
 

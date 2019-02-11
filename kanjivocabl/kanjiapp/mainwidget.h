@@ -33,6 +33,7 @@ private slots:
     void onBackButtonClicked();
 
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
+    void onKanjiChanged(kanji_data::kanji_compound &kc);
 
 private:
     void setupLayout();

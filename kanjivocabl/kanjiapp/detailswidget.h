@@ -30,7 +30,7 @@ signals:
     void kanjiDeleted(kcomp::kanji_id kanjiId);
 
 public slots:
-    void onKanjiChanged(const kcomp &kc);
+    void onKanjiChanged(kcomp &kc);
     void onEditRequested();
     void onKanjiDeleted();
 
@@ -40,7 +40,7 @@ private:
     void setupButtons();
 
     QVBoxLayout *l;
-    const kcomp *curr_kanji;
+    kcomp *curr_kanji;
 
     Ui::DetailsWidget *ui;
 };

@@ -18,7 +18,7 @@ KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
     // connect handler to QListView signal
     connect(listView, &QListView::clicked, this, &KanjiListWidget::onKanjiClicked);
 
-    kanjiPageId = -1;
+    detailPageId = -1;
 
     setupLayout();
 }
@@ -48,10 +48,10 @@ void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 
     // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
-    emit kanjiPageOpened(kanjiPageId);
+    emit kanjiPageOpened(detailPageId);
 }
 
-KanjiListModel::KanjiListModel(QVector<kanji_compound> &kanji, QObject *parent) :
+KanjiListModel::KanjiListModel(QVector<kcomp> &kanji, QObject *parent) :
     QAbstractListModel(parent), kanji(kanji) {}
 
 
@@ -74,14 +74,14 @@ QVariant KanjiListModel::data(const QModelIndex &index, int role) const
     }
 }
 
-const kanji_data::kanji_compound &KanjiListModel::getKanji(const QModelIndex &ind) const
+KanjiListModel::kcomp &KanjiListModel::getKanji(const QModelIndex &ind)
 {
     return kanji[ind.row()];
 }
 
-int KanjiListModel::getKanjiRow(kanji_compound::kanji_id id)
+int KanjiListModel::getKanjiRow(kcomp::kanji_id id)
 {
-    auto it = std::find_if(kanji.begin(), kanji.end(), [=](kanji_compound kc) {
+    auto it = std::find_if(kanji.begin(), kanji.end(), [=](kcomp kc) {
         return kc.get_id() == id;
     });
 

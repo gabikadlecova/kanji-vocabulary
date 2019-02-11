@@ -21,10 +21,10 @@ public:
     explicit KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
                              QWidget *parent = nullptr);
     ~KanjiListWidget();
-    int kanjiPageId;
+    int detailPageId;
 
 signals:
-    void currentKanjiChanged(const kanji_data::kanji_compound &kc);
+    void currentKanjiChanged(kanji_data::kanji_compound &kc);
     void kanjiPageOpened(int pageId);
 
 public slots:
@@ -47,16 +47,16 @@ class KanjiListModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    using kanji_compound = kanji_data::kanji_compound;
+    using kcomp = kanji_data::kanji_compound;
 
-    explicit KanjiListModel(QVector<kanji_compound> &kanji, QObject *parent = nullptr);
+    explicit KanjiListModel(QVector<kcomp> &kanji, QObject *parent = nullptr);
 
     virtual int rowCount(const QModelIndex &parent) const override;
     virtual QVariant data(const QModelIndex &index, int role) const override;
 
-    const kanji_compound &getKanji(const QModelIndex &ind) const;
+    kcomp &getKanji(const QModelIndex &ind);
 
-    int getKanjiRow(kanji_compound::kanji_id id);
+    int getKanjiRow(kcomp::kanji_id id);
     virtual bool removeRows(int row, int count,
                             const QModelIndex &parent = QModelIndex()) override;
 //signals:
@@ -66,7 +66,7 @@ public:
 //    void kanjiDataChanged();
 
 private:
-    QVector<kanji_compound> &kanji;
+    QVector<kcomp> &kanji;
 };
 
 #endif // KANJILISTWIDGET_H

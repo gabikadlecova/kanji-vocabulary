@@ -48,7 +48,7 @@ void kanji_data::kanji_lib::update_kanji(kanji_compound kanji) {
 		throw std::logic_error("Cannot update kanji - missing value");
 	}
 
-	*it = kanji;
+    *it = std::move(kanji);
 }
 
 void kanji_data::kanji_lib::delete_kanji(kanji_compound::kanji_id id) {
