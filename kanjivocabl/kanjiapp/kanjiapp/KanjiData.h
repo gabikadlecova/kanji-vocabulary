@@ -62,7 +62,7 @@ namespace kanji_data
         std::vector<kanji_compound> &get_kanji() { return kanji_; }
         const std::vector<kanji_compound> &get_kanji() const { return kanji_; }
 
-		void add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning);
+        kanji_compound add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning);
 		void update_kanji(kanji_compound kanji);
 		void delete_kanji(kanji_compound::kanji_id id);
 		void reset_time();

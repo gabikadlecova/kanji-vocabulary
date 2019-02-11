@@ -6,6 +6,7 @@
 
 #include "detailswidget.h"
 #include "editwidget.h"
+#include "addkanjiwidget.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -24,6 +25,8 @@ MainWidget::MainWidget(kanji_data::kanji_lib lib,
 }
 
 MainWidget::~MainWidget() {
+    delete idStack;
+
     delete ui;
 }
 
@@ -74,6 +77,14 @@ void MainWidget::onKanjiChanged(kanji_data::kanji_compound &kc)
     lib.update_kanji(kc);
 
     // TODO go back?
+    onBackButtonClicked();
+}
+
+void MainWidget::onKanjiAdded(kanji_data::kanji_compound kc)
+{
+    auto new_kc = lib.add_kanji(kc.get_kanji(), kc.reading, kc.meaning);
+
+    emit kanjiAdded(new_kc);
     onBackButtonClicked();
 }
 
@@ -137,7 +148,7 @@ void MainWidget::setupPage() {
     // kanji list setup
     auto kanjiList = new KanjiListWidget(kanji_v);
 
-    connect(kanjiList, &KanjiListWidget::kanjiPageOpened, this, &MainWidget::onPageChanged);
+    connect(kanjiList, &KanjiListWidget::detailsPageOpened, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
 
     // connect list to kanji detail
@@ -173,6 +184,21 @@ void MainWidget::setupPage() {
 
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
             ew, &EditWidget::onKanjiChanged);
+
+    // add page
+    auto aw = new AddKanjiWidget();
+    kanjiList->addPageId = pageStack->count();
+    pageStack->addWidget(aw);
+
+    // connect add
+    connect(aw, &AddKanjiWidget::kanjiAdded,
+            this, &MainWidget::onKanjiAdded);
+    connect(this, &MainWidget::kanjiAdded,
+            kanjiList, &KanjiListWidget::onKanjiAdded);
+
+    // connect to kanji list
+    connect(kanjiList, &KanjiListWidget::addPageOpened,
+            this, &MainWidget::onPageChanged);
 
 
     // TODO connect edit to detail to go back

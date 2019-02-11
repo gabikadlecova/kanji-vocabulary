@@ -1,7 +1,7 @@
 #include "kanjilistwidget.h"
 #include "ui_kanjilistwidget.h"
 
-#include <QGridLayout>
+#include <QPushButton>
 
 
 KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
@@ -30,16 +30,43 @@ KanjiListWidget::~KanjiListWidget()
 
 void KanjiListWidget::setupLayout()
 {
-    QGridLayout *l = new QGridLayout();
-    l->addWidget(listView);
+    l = new QGridLayout();
+    setupHeader();
+
+    l->addWidget(listView, 1, 0, 1, 2);
     setLayout(l);
+}
+
+void KanjiListWidget::setupHeader()
+{
+    QPushButton *addButton = new QPushButton("Add kanji");
+    connect(addButton, &QPushButton::clicked,
+            this, &KanjiListWidget::onAddRequested);
+
+    QPushButton *filterButton = new QPushButton("Filter");
+    connect(filterButton, &QPushButton::clicked,
+            this, &KanjiListWidget::onFilterRequested);
+
+    l->addWidget(addButton, 0, 0);
+    l->addWidget(filterButton, 0, 1);
 }
 
 void KanjiListWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
 {
+    // TODO delete in both (if filter != nullptr)
     int row = model->getKanjiRow(id);
 
+    // TODO check retval
     model->removeRows(row, 1);
+}
+
+void KanjiListWidget::onKanjiAdded(kanji_data::kanji_compound kc)
+{
+    int row = model->rowCount();
+
+    // TODO check retval;
+    model->insertRows(row, 1);
+    model->setKanji(row, std::move(kc));
 }
 
 void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
@@ -48,7 +75,17 @@ void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 
     // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
-    emit kanjiPageOpened(detailPageId);
+    emit detailsPageOpened(detailPageId);
+}
+
+void KanjiListWidget::onAddRequested()
+{
+    emit addPageOpened(addPageId);
+}
+
+void KanjiListWidget::onFilterRequested()
+{
+    emit filterDialogOpened();
 }
 
 KanjiListModel::KanjiListModel(QVector<kcomp> &kanji, QObject *parent) :
@@ -92,10 +129,26 @@ int KanjiListModel::getKanjiRow(kcomp::kanji_id id)
 
 bool KanjiListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
+    // TODO retval?
     beginRemoveRows(parent, row, row + count - 1);
     kanji.erase(kanji.begin() + row, kanji.begin() + row + count);
 
     endRemoveRows();
     return true;
+}
+
+bool KanjiListModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    // TODO retval?
+    beginInsertRows(parent, row, row + count - 1);
+    kanji.insert(row, count, kcomp());
+
+    endInsertRows();
+    return true;
+}
+
+void KanjiListModel::setKanji(int row, kcomp kc)
+{
+    kanji[row] = std::move(kc);
 }
 //todo listview, connect signals as to actualize list

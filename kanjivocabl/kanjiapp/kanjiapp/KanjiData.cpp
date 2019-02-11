@@ -33,13 +33,15 @@ void kanji_data::kanji_lib::reset_time() {
 	std::for_each(kanji_.begin(), kanji_.end(), [](kanji_compound kc) {kc.reset_time(); });
 }
 
-void kanji_data::kanji_lib::add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning) {
+kanji_data::kanji_compound kanji_data::kanji_lib::add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning) {
 	if (std::find_if(kanji_.begin(), kanji_.end(), [&](const kanji_compound &kc) {return kanji_str == kc.get_kanji(); }) != kanji_.end()) {
 		throw std::logic_error("Duplicate kanji");
 	}
 
 	kanji_compound kc{ std::move(kanji_str), std::move(reading), std::move(meaning), ++max_id_, 1, std::chrono::system_clock::now() };
-	kanji_.push_back(std::move(kc));
+    kanji_.push_back(kc);
+
+    return kc;
 }
 
 void kanji_data::kanji_lib::update_kanji(kanji_compound kanji) {

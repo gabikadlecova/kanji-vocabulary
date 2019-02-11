@@ -41,7 +41,8 @@ SOURCES += \
     main.cpp \
     mainwidget.cpp \
     trainflipwidget.cpp \
-    trainwidget.cpp
+    trainwidget.cpp \
+    addkanjiwidget.cpp
 
 HEADERS += \
         kanjiwidget.h \
@@ -58,7 +59,8 @@ HEADERS += \
     kanjiwidget.h \
     mainwidget.h \
     trainflipwidget.h \
-    trainwidget.h
+    trainwidget.h \
+    addkanjiwidget.h
 
 FORMS += \
         kanjiwidget.ui \
@@ -67,7 +69,8 @@ FORMS += \
     trainwidget.ui \
     kanjilistwidget.ui \
     trainflipwidget.ui \
-    mainwidget.ui
+    mainwidget.ui \
+    addkanjiwidget.ui
 
 CONFIG += mobility
 MOBILITY = 

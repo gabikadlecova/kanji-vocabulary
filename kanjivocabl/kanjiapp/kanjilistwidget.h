@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QAbstractListModel>
 #include <QListView>
+#include <QGridLayout>
 
 #include "kanjiapp/KanjiData.h"
 
@@ -22,25 +23,38 @@ public:
                              QWidget *parent = nullptr);
     ~KanjiListWidget();
     int detailPageId;
+    int addPageId;
 
 signals:
     void currentKanjiChanged(kanji_data::kanji_compound &kc);
-    void kanjiPageOpened(int pageId);
+    void detailsPageOpened(int pageId);
+    void addPageOpened(int pageId);
+    void filterDialogOpened();
 
 public slots:
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
+    void onKanjiAdded(kanji_data::kanji_compound kc);
 
 private slots:
     void onKanjiClicked(const QModelIndex &index);
+    void onAddRequested();
+    void onFilterRequested();
 
 private:
     void setupLayout();
+    void setupHeader();
+
+    QGridLayout *l;
 
     KanjiListModel *model;
+    // TODO slots for filter/normal mode change, delete etc in both...
+    KanjiListModel *filterModel;
+
     QListView *listView;
 
     Ui::KanjiListWidget *ui;
 };
+
 
 class KanjiListModel : public QAbstractListModel
 {
@@ -51,7 +65,7 @@ public:
 
     explicit KanjiListModel(QVector<kcomp> &kanji, QObject *parent = nullptr);
 
-    virtual int rowCount(const QModelIndex &parent) const override;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     virtual QVariant data(const QModelIndex &index, int role) const override;
 
     kcomp &getKanji(const QModelIndex &ind);
@@ -59,6 +73,11 @@ public:
     int getKanjiRow(kcomp::kanji_id id);
     virtual bool removeRows(int row, int count,
                             const QModelIndex &parent = QModelIndex()) override;
+
+    virtual bool insertRows(int row, int count,
+                            const QModelIndex &parent = QModelIndex()) override;
+
+    void setKanji(int row, kcomp kc);
 //signals:
 //    void kanjiChanged();
 

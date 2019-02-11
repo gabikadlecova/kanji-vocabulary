@@ -27,6 +27,8 @@ signals:
     void pageOpened();
     void homeOpened();
 
+    void kanjiAdded(kanji_data::kanji_compound kc);
+
 private slots:
     void onPageChanged(int pageId);
     void onHomeButtonClicked();
@@ -34,6 +36,7 @@ private slots:
 
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
     void onKanjiChanged(kanji_data::kanji_compound &kc);
+    void onKanjiAdded(kanji_data::kanji_compound kc);
 
 private:
     void setupLayout();
