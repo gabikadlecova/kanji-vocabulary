@@ -29,13 +29,18 @@ signals:
 
     void kanjiAdded(kanji_data::kanji_compound kc);
 
+    // TODO enum, filter results (kanji, reading...), then trigger with result
+    // enum results in filterDialog probably
+
 private slots:
     void onPageChanged(int pageId);
     void onHomeButtonClicked();
     void onBackButtonClicked();
 
+    void onFilterDialogRequested();
+
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
-    void onKanjiChanged(kanji_data::kanji_compound &kc);
+    void onKanjiChanged(kanji_data::kanji_compound kc);
     void onKanjiAdded(kanji_data::kanji_compound kc);
 
 private:

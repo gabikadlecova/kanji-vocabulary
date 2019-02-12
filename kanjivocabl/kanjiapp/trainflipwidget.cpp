@@ -12,18 +12,3 @@ TrainFlipWidget::~TrainFlipWidget()
 {
     delete ui;
 }
-
-void TrainFlipWidget::on_ok_button_clicked()
-{
-
-}
-
-void TrainFlipWidget::on_maybe_button_clicked()
-{
-
-}
-
-void TrainFlipWidget::on_no_button_clicked()
-{
-
-}

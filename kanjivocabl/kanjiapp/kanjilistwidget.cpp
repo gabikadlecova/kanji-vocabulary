@@ -41,11 +41,11 @@ void KanjiListWidget::setupHeader()
 {
     QPushButton *addButton = new QPushButton("Add kanji");
     connect(addButton, &QPushButton::clicked,
-            this, &KanjiListWidget::onAddRequested);
+            this, &KanjiListWidget::onAddKanjiClicked);
 
     QPushButton *filterButton = new QPushButton("Filter");
     connect(filterButton, &QPushButton::clicked,
-            this, &KanjiListWidget::onFilterRequested);
+            this, &KanjiListWidget::onFilterClicked);
 
     l->addWidget(addButton, 0, 0);
     l->addWidget(filterButton, 0, 1);
@@ -75,17 +75,17 @@ void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 
     // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
-    emit detailsPageOpened(detailPageId);
+    emit detailsPageRequested(detailPageId);
 }
 
-void KanjiListWidget::onAddRequested()
+void KanjiListWidget::onAddKanjiClicked()
 {
-    emit addPageOpened(addPageId);
+    emit addPageRequested(addPageId);
 }
 
-void KanjiListWidget::onFilterRequested()
+void KanjiListWidget::onFilterClicked()
 {
-    emit filterDialogOpened();
+    emit filterDialogRequested();
 }
 
 KanjiListModel::KanjiListModel(QVector<kcomp> &kanji, QObject *parent) :

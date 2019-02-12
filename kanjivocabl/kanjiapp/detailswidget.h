@@ -26,13 +26,13 @@ signals:
     void kanjiMeaningChanged(const QString &text);
     void kanjiLevelChanged(kcomp::kanji_level level);
 
-    void editPageOpened(int pageId);
-    void kanjiDeleted(kcomp::kanji_id kanjiId);
+    void editPageRequested(int pageId);
+    void kanjiDeletionRequested(kcomp::kanji_id kanjiId);
 
 public slots:
     void onKanjiChanged(kcomp &kc);
-    void onEditRequested();
-    void onKanjiDeleted();
+    void onEditClicked();
+    void onDeletionClicked();
 
 private:
     void setupLayout();

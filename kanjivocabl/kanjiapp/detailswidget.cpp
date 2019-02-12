@@ -30,15 +30,15 @@ void DetailsWidget::onKanjiChanged(kcomp &kc)
     emit kanjiLevelChanged(kc.get_level());
 }
 
-void DetailsWidget::onEditRequested()
+void DetailsWidget::onEditClicked()
 {
     // todo connect to edit
-    emit editPageOpened(editPageId);
+    emit editPageRequested(editPageId);
 }
 
-void DetailsWidget::onKanjiDeleted()
+void DetailsWidget::onDeletionClicked()
 {
-    emit kanjiDeleted(curr_kanji->get_id());
+    emit kanjiDeletionRequested(curr_kanji->get_id());
 }
 
 void DetailsWidget::setupLayout()
@@ -75,11 +75,11 @@ void DetailsWidget::setupButtons()
 {
     // edit
     QPushButton *editButton = new QPushButton("Edit");
-    connect(editButton, &QPushButton::clicked, this, &DetailsWidget::onEditRequested);
+    connect(editButton, &QPushButton::clicked, this, &DetailsWidget::onEditClicked);
 
     // delete
     QPushButton *deleteButton = new QPushButton("Delete");
-    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onKanjiDeleted);
+    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onDeletionClicked);
 
     // TODO reset button
 

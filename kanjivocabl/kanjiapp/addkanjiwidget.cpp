@@ -18,13 +18,13 @@ AddKanjiWidget::~AddKanjiWidget()
 }
 
 
-void AddKanjiWidget::onAddConfirmed()
+void AddKanjiWidget::onAddClicked()
 {
     auto k = kanji_l->text().toStdWString();
     auto r = reading_l->text().toStdWString();
     auto m = meaning_l->text().toStdWString();
 
-    emit kanjiAdded(kcomp(k, r, m));
+    emit kanjiAddRequested(kcomp(k, r, m));
 }
 
 void AddKanjiWidget::setupLayout()
@@ -47,7 +47,7 @@ void AddKanjiWidget::setupButtons()
 {
     QPushButton *addButton = new QPushButton("Add kanji");
     connect(addButton, &QPushButton::clicked,
-            this, &AddKanjiWidget::onAddConfirmed);
+            this, &AddKanjiWidget::onAddClicked);
 
     l->addWidget(addButton);
 }

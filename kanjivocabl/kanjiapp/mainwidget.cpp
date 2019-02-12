@@ -4,6 +4,8 @@
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 
+#include "filterdialog.h"
+
 #include "detailswidget.h"
 #include "editwidget.h"
 #include "addkanjiwidget.h"
@@ -63,27 +65,39 @@ void MainWidget::onBackButtonClicked() {
 
 }
 
+void MainWidget::onFilterDialogRequested()
+{
+    FilterDialog *d = new FilterDialog(this);
+    d->show();
+}
+
 void MainWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
 {
     // erase from lib only here
     lib.delete_kanji(id);
 
+    // TODO handle errs
+
     // todo go back somewhere...
     onBackButtonClicked();
 }
 
-void MainWidget::onKanjiChanged(kanji_data::kanji_compound &kc)
+void MainWidget::onKanjiChanged(kanji_data::kanji_compound kc)
 {
-    lib.update_kanji(kc);
+    lib.update_kanji(std::move(kc));
 
+    // TODO errors
     // TODO go back?
     onBackButtonClicked();
 }
 
 void MainWidget::onKanjiAdded(kanji_data::kanji_compound kc)
 {
-    auto new_kc = lib.add_kanji(kc.get_kanji(), kc.reading, kc.meaning);
+    auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
+                                std::move(kc.reading),
+                                std::move(kc.meaning));
 
+    // TODO errors
     emit kanjiAdded(new_kc);
     onBackButtonClicked();
 }
@@ -148,8 +162,12 @@ void MainWidget::setupPage() {
     // kanji list setup
     auto kanjiList = new KanjiListWidget(kanji_v);
 
-    connect(kanjiList, &KanjiListWidget::detailsPageOpened, this, &MainWidget::onPageChanged);
+    connect(kanjiList, &KanjiListWidget::detailsPageRequested, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
+
+    // filter dialog
+    connect(kanjiList, &KanjiListWidget::filterDialogRequested,
+            this, &MainWidget::onFilterDialogRequested);
 
     // connect list to kanji detail
     int detailId = pageStack->count();
@@ -167,19 +185,19 @@ void MainWidget::setupPage() {
     pageStack->addWidget(ew);
 
 
-    connect(dw, &DetailsWidget::editPageOpened,
+    connect(dw, &DetailsWidget::editPageRequested,
             this, &MainWidget::onPageChanged);
 
     // connect - kanji deletion
-    connect(dw, &DetailsWidget::kanjiDeleted,
+    connect(dw, &DetailsWidget::kanjiDeletionRequested,
             this, &MainWidget::onKanjiDeleted);
-    connect(dw, &DetailsWidget::kanjiDeleted,
+    connect(dw, &DetailsWidget::kanjiDeletionRequested,
             kanjiList, &KanjiListWidget::onKanjiDeleted);
 
     // edit page connects
-    connect(ew, &EditWidget::kanjiChanged,
+    connect(ew, &EditWidget::kanjiUpdateSaved,
             dw, &DetailsWidget::onKanjiChanged);
-    connect(ew, &EditWidget::kanjiChanged,
+    connect(ew, &EditWidget::kanjiUpdateSaved,
             this, &MainWidget::onKanjiChanged);
 
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
@@ -191,13 +209,13 @@ void MainWidget::setupPage() {
     pageStack->addWidget(aw);
 
     // connect add
-    connect(aw, &AddKanjiWidget::kanjiAdded,
+    connect(aw, &AddKanjiWidget::kanjiAddRequested,
             this, &MainWidget::onKanjiAdded);
     connect(this, &MainWidget::kanjiAdded,
             kanjiList, &KanjiListWidget::onKanjiAdded);
 
     // connect to kanji list
-    connect(kanjiList, &KanjiListWidget::addPageOpened,
+    connect(kanjiList, &KanjiListWidget::addPageRequested,
             this, &MainWidget::onPageChanged);
 
 

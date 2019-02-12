@@ -26,11 +26,12 @@ signals:
     void kanjiReadingChanged(const QString &text);
     void kanjiMeaningChanged(const QString &text);
 
-    void kanjiChanged(kcomp &kanji);
+    // TODO change reference to value and handle it in main for DetailsWidget!
+    void kanjiUpdateSaved(kcomp &kanji);
 
 public slots:
     void onKanjiChanged(kcomp &kc);
-    void onSaveRequested();
+    void onSaveClicked();
 
 private:
     void setupLayout();

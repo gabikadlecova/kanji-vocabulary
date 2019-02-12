@@ -28,12 +28,12 @@ void EditWidget::onKanjiChanged(kcomp &kc)
     emit kanjiMeaningChanged(QString::fromWCharArray(kc.meaning.c_str()));
 }
 
-void EditWidget::onSaveRequested()
+void EditWidget::onSaveClicked()
 {
     curr_kanji->meaning = meaning_l->text().toStdWString();
     curr_kanji->reading = reading_l->text().toStdWString();
 
-    emit kanjiChanged(*curr_kanji);
+    emit kanjiUpdateSaved(*curr_kanji);
 }
 
 void EditWidget::setupLayout()
@@ -67,7 +67,7 @@ void EditWidget::setupButtons()
 {
     // submit
     QPushButton *sb = new QPushButton("Save");
-    connect(sb, &QPushButton::clicked, this, &EditWidget::onSaveRequested);
+    connect(sb, &QPushButton::clicked, this, &EditWidget::onSaveClicked);
 
     l->addWidget(sb);
 }

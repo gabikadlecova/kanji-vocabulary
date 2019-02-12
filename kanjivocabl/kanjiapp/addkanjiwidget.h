@@ -22,10 +22,10 @@ public:
     ~AddKanjiWidget();
 
 signals:
-    void kanjiAdded(kcomp kc);
+    void kanjiAddRequested(kcomp kc);
 
 private slots:
-    void onAddConfirmed();
+    void onAddClicked();
 
 private:
     void setupLayout();

@@ -12,8 +12,3 @@ TrainWidget::~TrainWidget()
 {
     delete ui;
 }
-
-void TrainWidget::on_flip_button_clicked()
-{
-
-}

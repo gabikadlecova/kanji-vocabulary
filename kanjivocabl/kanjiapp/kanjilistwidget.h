@@ -27,9 +27,9 @@ public:
 
 signals:
     void currentKanjiChanged(kanji_data::kanji_compound &kc);
-    void detailsPageOpened(int pageId);
-    void addPageOpened(int pageId);
-    void filterDialogOpened();
+    void detailsPageRequested(int pageId);
+    void addPageRequested(int pageId);
+    void filterDialogRequested();
 
 public slots:
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
@@ -37,8 +37,8 @@ public slots:
 
 private slots:
     void onKanjiClicked(const QModelIndex &index);
-    void onAddRequested();
-    void onFilterRequested();
+    void onAddKanjiClicked();
+    void onFilterClicked();
 
 private:
     void setupLayout();

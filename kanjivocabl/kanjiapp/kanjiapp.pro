@@ -42,7 +42,8 @@ SOURCES += \
     mainwidget.cpp \
     trainflipwidget.cpp \
     trainwidget.cpp \
-    addkanjiwidget.cpp
+    addkanjiwidget.cpp \
+    filterdialog.cpp
 
 HEADERS += \
         kanjiwidget.h \
@@ -60,7 +61,8 @@ HEADERS += \
     mainwidget.h \
     trainflipwidget.h \
     trainwidget.h \
-    addkanjiwidget.h
+    addkanjiwidget.h \
+    filterdialog.h
 
 FORMS += \
         kanjiwidget.ui \
@@ -70,7 +72,8 @@ FORMS += \
     kanjilistwidget.ui \
     trainflipwidget.ui \
     mainwidget.ui \
-    addkanjiwidget.ui
+    addkanjiwidget.ui \
+    filterdialog.ui
 
 CONFIG += mobility
 MOBILITY = 

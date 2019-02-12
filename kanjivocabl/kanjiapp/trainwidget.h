@@ -15,9 +15,6 @@ public:
     explicit TrainWidget(QWidget *parent = nullptr);
     ~TrainWidget();
 
-private slots:
-    void on_flip_button_clicked();
-
 private:
     Ui::TrainWidget *ui;
 };
