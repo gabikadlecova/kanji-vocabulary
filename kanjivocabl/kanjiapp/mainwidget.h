@@ -9,7 +9,10 @@
 
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
+#include "filterdialog.h"
+
 #include "kanjiapp/KanjiData.h"
+
 
 namespace Ui {
 class MainWidget;
@@ -17,6 +20,8 @@ class MainWidget;
 
 class MainWidget : public QWidget {
     Q_OBJECT
+
+    using kcomp = kanji_data::kanji_compound;
 
 public:
     explicit MainWidget(kanji_data::kanji_lib lib,
@@ -27,10 +32,11 @@ signals:
     void pageOpened();
     void homeOpened();
 
-    void kanjiAdded(kanji_data::kanji_compound kc);
-
-    // TODO enum, filter results (kanji, reading...), then trigger with result
-    // enum results in filterDialog probably
+    // todo emit some of this somewhere
+    void kanjiAdded(kcomp kc);
+    void kanjiDeleted(kcomp::kanji_id id);
+    void kanjiChanged(kcomp kc);
+    void kanjiFiltered(QVector<kcomp> newFilter);
 
 private slots:
     void onPageChanged(int pageId);
@@ -39,9 +45,11 @@ private slots:
 
     void onFilterDialogRequested();
 
-    void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
-    void onKanjiChanged(kanji_data::kanji_compound kc);
-    void onKanjiAdded(kanji_data::kanji_compound kc);
+    void onKanjiDeleted(kcomp::kanji_id id);
+    void onKanjiChanged(kcomp kc);
+    void onKanjiAdded(kcomp kc);
+
+    void onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal);
 
 private:
     void setupLayout();
@@ -49,11 +57,11 @@ private:
     void setupPage();
 
     kanji_data::kanji_lib lib;
-    QVector<kanji_data::kanji_compound> kanji_v;
+    QVector<kcomp> kanji_v;
 
     QSplitter *menuSplitter;
     QStackedWidget *pageStack;
-    QStack<int> *idStack;
+    QStack<int> idStack;
 
     Ui::MainWidget *ui;
 };

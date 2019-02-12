@@ -4,7 +4,6 @@
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 
-#include "filterdialog.h"
 
 #include "detailswidget.h"
 #include "editwidget.h"
@@ -17,7 +16,6 @@ MainWidget::MainWidget(kanji_data::kanji_lib lib,
                        QWidget *parent) :
     QWidget(parent),
     lib(lib),
-    idStack(new QStack<int>()),
     ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
@@ -27,23 +25,21 @@ MainWidget::MainWidget(kanji_data::kanji_lib lib,
 }
 
 MainWidget::~MainWidget() {
-    delete idStack;
-
     delete ui;
 }
 
 void MainWidget::onPageChanged(int pageId) {
     pageStack->setCurrentIndex(pageId);
 
-    idStack->push(pageId);
+    idStack.push(pageId);
 
     emit pageOpened();
 }
 
 void MainWidget::onHomeButtonClicked() {
     pageStack->setCurrentIndex(0);
-    idStack->clear();
-    idStack->push(0);
+    idStack.clear();
+    idStack.push(0);
 
     emit homeOpened();
 }
@@ -54,8 +50,8 @@ void MainWidget::onBackButtonClicked() {
         return;
     }
 
-    idStack->pop();
-    int nextId = idStack->top();
+    idStack.pop();
+    int nextId = idStack.top();
 
     if (nextId == 0) {
         onHomeButtonClicked();
@@ -68,10 +64,14 @@ void MainWidget::onBackButtonClicked() {
 void MainWidget::onFilterDialogRequested()
 {
     FilterDialog *d = new FilterDialog(this);
+
+    connect(d, &FilterDialog::filterConfirmed,
+            this, &MainWidget::onKanjiFiltered);
+
     d->show();
 }
 
-void MainWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
+void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
     // erase from lib only here
     lib.delete_kanji(id);
@@ -82,7 +82,7 @@ void MainWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
     onBackButtonClicked();
 }
 
-void MainWidget::onKanjiChanged(kanji_data::kanji_compound kc)
+void MainWidget::onKanjiChanged(kcomp kc)
 {
     lib.update_kanji(std::move(kc));
 
@@ -91,7 +91,7 @@ void MainWidget::onKanjiChanged(kanji_data::kanji_compound kc)
     onBackButtonClicked();
 }
 
-void MainWidget::onKanjiAdded(kanji_data::kanji_compound kc)
+void MainWidget::onKanjiAdded(kcomp kc)
 {
     auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
                                 std::move(kc.reading),
@@ -100,6 +100,36 @@ void MainWidget::onKanjiAdded(kanji_data::kanji_compound kc)
     // TODO errors
     emit kanjiAdded(new_kc);
     onBackButtonClicked();
+}
+
+void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
+{
+    std::vector<kcomp> filterRes;
+    using Mode = FilterDialog::FilterMode;
+
+    switch (fm) {
+        case Mode::byKanji:
+            filterRes = kanji_data::by_kanji(lib, filterVal.toStdWString());
+            break;
+
+        case Mode::byReading:
+            filterRes = kanji_data::by_reading(lib, filterVal.toStdWString());
+            break;
+
+        case Mode::byMeaning:
+            filterRes = kanji_data::by_meaning(lib, filterVal.toStdWString());
+            break;
+
+        case Mode::none:
+            // TODO no change, emit "did not change"
+            break;
+
+        default:
+            // TODO some nasty error
+            break;
+    }
+
+    emit kanjiFiltered(QVector<kcomp>::fromStdVector(std::move(filterRes)));
 }
 
 void MainWidget::setupLayout() {
@@ -152,7 +182,7 @@ void MainWidget::setupPage() {
 
     auto kv = new KanjiWidget(pageStack);
     pageStack->addWidget(kv);
-    idStack->push(0);
+    idStack.push(0);
 
     // tile page setup
     connect(kv, &KanjiWidget::pageButtonClicked, this, &MainWidget::onPageChanged);

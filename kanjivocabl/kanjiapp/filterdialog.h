@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QMap>
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -21,7 +22,7 @@ public:
     ~FilterDialog();
 
     enum class FilterMode {
-        byKanji, byReading, byMeaning
+        none, byKanji, byReading, byMeaning
     };
 
 signals:
@@ -42,6 +43,11 @@ private:
     QComboBox *cb;
     QLineEdit *filterVal;
     QDialogButtonBox *box;
+
+    QMap<QString, FilterMode> modeMap;
+
+    FilterMode prevMode;
+    QString prevString;
 
     Ui::FilterDialog *ui;
 };

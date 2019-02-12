@@ -71,7 +71,7 @@ namespace kanji_data
 		std::vector<kanji_compound> kanji_;
 	};
 
-	std::vector<kanji_compound> by_kanji(const kanji_lib &lib, wchar_t k);
+    std::vector<kanji_compound> by_kanji(const kanji_lib &lib, const std::wstring &m);
 	std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::wstring &m);
 	std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r);
 	std::vector<kanji_compound> due_today(const kanji_lib &lib);
