@@ -19,7 +19,7 @@ class KanjiListWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
+    explicit KanjiListWidget(QVector<kanji_data::kanji_compound> kanji,
                              QWidget *parent = nullptr);
     ~KanjiListWidget();
     int detailPageId;
@@ -34,6 +34,8 @@ signals:
 public slots:
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
     void onKanjiAdded(kanji_data::kanji_compound kc);
+    void onKanjiFiltered(QVector<kanji_data::kanji_compound> filter);
+    void onFilterReset();
 
 private slots:
     void onKanjiClicked(const QModelIndex &index);
@@ -47,7 +49,6 @@ private:
     QGridLayout *l;
 
     KanjiListModel *model;
-    // TODO slots for filter/normal mode change, delete etc in both...
     KanjiListModel *filterModel;
 
     QListView *listView;
@@ -63,7 +64,7 @@ class KanjiListModel : public QAbstractListModel
 public:
     using kcomp = kanji_data::kanji_compound;
 
-    explicit KanjiListModel(QVector<kcomp> &kanji, QObject *parent = nullptr);
+    explicit KanjiListModel(QVector<kcomp> kanji, QObject *parent = nullptr);
 
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     virtual QVariant data(const QModelIndex &index, int role) const override;
@@ -85,7 +86,7 @@ public:
 //    void kanjiDataChanged();
 
 private:
-    QVector<kcomp> &kanji;
+    QVector<kcomp> kanji;
 };
 
 #endif // KANJILISTWIDGET_H

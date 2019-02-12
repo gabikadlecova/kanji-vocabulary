@@ -37,13 +37,12 @@ signals:
     void kanjiDeleted(kcomp::kanji_id id);
     void kanjiChanged(kcomp kc);
     void kanjiFiltered(QVector<kcomp> newFilter);
+    void filterReset();
 
 private slots:
     void onPageChanged(int pageId);
     void onHomeButtonClicked();
     void onBackButtonClicked();
-
-    void onFilterDialogRequested();
 
     void onKanjiDeleted(kcomp::kanji_id id);
     void onKanjiChanged(kcomp kc);
@@ -59,6 +58,7 @@ private:
     kanji_data::kanji_lib lib;
     QVector<kcomp> kanji_v;
 
+    FilterDialog *d;
     QSplitter *menuSplitter;
     QStackedWidget *pageStack;
     QStack<int> idStack;

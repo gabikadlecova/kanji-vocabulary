@@ -4,14 +4,16 @@
 #include <QPushButton>
 
 
-KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> &kanji,
+KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> kanji,
                                  QWidget *parent) :
     QWidget(parent),
     ui(new Ui::KanjiListWidget)
 {
     ui->setupUi(this);
 
-    model = new KanjiListModel(kanji);
+    model = new KanjiListModel(std::move(kanji));
+    filterModel = nullptr;
+
     listView = new QListView();
     listView->setModel(model);
 
@@ -53,11 +55,20 @@ void KanjiListWidget::setupHeader()
 
 void KanjiListWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
 {
-    // TODO delete in both (if filter != nullptr)
     int row = model->getKanjiRow(id);
 
     // TODO check retval
     model->removeRows(row, 1);
+
+    if (filterModel != nullptr) {
+        row = filterModel->getKanjiRow(id);
+        if (row == -1) {
+            return;
+        }
+
+        // TODO check retval
+        filterModel->removeRows(row, 1);
+    }
 }
 
 void KanjiListWidget::onKanjiAdded(kanji_data::kanji_compound kc)
@@ -67,11 +78,28 @@ void KanjiListWidget::onKanjiAdded(kanji_data::kanji_compound kc)
     // TODO check retval;
     model->insertRows(row, 1);
     model->setKanji(row, std::move(kc));
+
+    // maybe not slot directly...
+    onFilterReset();
+}
+
+void KanjiListWidget::onKanjiFiltered(QVector<kanji_data::kanji_compound> filter)
+{
+    filterModel = new KanjiListModel(std::move(filter));
+    listView->setModel(filterModel);
+}
+
+void KanjiListWidget::onFilterReset()
+{
+    listView->setModel(model);
+    delete filterModel;
+    filterModel = nullptr;
 }
 
 void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 {
-    auto &&kc = model->getKanji(index);
+    auto &&kc = filterModel == nullptr ? model->getKanji(index) :
+                                         filterModel->getKanji(index);
 
     // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
@@ -88,8 +116,8 @@ void KanjiListWidget::onFilterClicked()
     emit filterDialogRequested();
 }
 
-KanjiListModel::KanjiListModel(QVector<kcomp> &kanji, QObject *parent) :
-    QAbstractListModel(parent), kanji(kanji) {}
+KanjiListModel::KanjiListModel(QVector<kcomp> kanji, QObject *parent) :
+    QAbstractListModel(parent), kanji(std::move(kanji)) {}
 
 
 int KanjiListModel::rowCount(const QModelIndex &parent) const
@@ -104,7 +132,10 @@ QVariant KanjiListModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
-        return QString::fromStdWString(kanji[index.row()].get_kanji());
+        return QString("%1 - %2").arg(
+                    QString::fromStdWString(kanji[index.row()].get_kanji()),
+                    QString::fromStdWString(kanji[index.row()].meaning)
+                );
     }
     else {
         return QVariant();
@@ -121,6 +152,10 @@ int KanjiListModel::getKanjiRow(kcomp::kanji_id id)
     auto it = std::find_if(kanji.begin(), kanji.end(), [=](kcomp kc) {
         return kc.get_id() == id;
     });
+
+    if (it == kanji.end()) {
+        return -1;
+    }
 
     // QVector size limitation
     int d =  std::distance(kanji.begin(), it);

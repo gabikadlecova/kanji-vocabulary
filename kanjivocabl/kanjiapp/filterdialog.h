@@ -27,6 +27,7 @@ public:
 
 signals:
     void filterConfirmed(FilterMode mode, QString param);
+    void enableFilterVal(bool hasFilter);
 
 private slots:
     void onFilterClicked();

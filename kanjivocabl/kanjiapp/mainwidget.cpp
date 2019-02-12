@@ -16,10 +16,14 @@ MainWidget::MainWidget(kanji_data::kanji_lib lib,
                        QWidget *parent) :
     QWidget(parent),
     lib(lib),
+    d(new FilterDialog(this)),
     ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
     kanji_v = QVector<kanji_data::kanji_compound>::fromStdVector(lib.get_kanji());
+
+    connect(d, &FilterDialog::filterConfirmed,
+            this, &MainWidget::onKanjiFiltered);
 
     setupLayout();
 }
@@ -61,15 +65,6 @@ void MainWidget::onBackButtonClicked() {
 
 }
 
-void MainWidget::onFilterDialogRequested()
-{
-    FilterDialog *d = new FilterDialog(this);
-
-    connect(d, &FilterDialog::filterConfirmed,
-            this, &MainWidget::onKanjiFiltered);
-
-    d->show();
-}
 
 void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
@@ -121,8 +116,8 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
             break;
 
         case Mode::none:
-            // TODO no change, emit "did not change"
-            break;
+            emit filterReset();
+            return;
 
         default:
             // TODO some nasty error
@@ -197,7 +192,7 @@ void MainWidget::setupPage() {
 
     // filter dialog
     connect(kanjiList, &KanjiListWidget::filterDialogRequested,
-            this, &MainWidget::onFilterDialogRequested);
+            d, &FilterDialog::show);
 
     // connect list to kanji detail
     int detailId = pageStack->count();
@@ -249,5 +244,10 @@ void MainWidget::setupPage() {
             this, &MainWidget::onPageChanged);
 
 
-    // TODO connect edit to detail to go back
+    // MESSY
+    // connect - filter
+    connect(this, &MainWidget::kanjiFiltered,
+            kanjiList, &KanjiListWidget::onKanjiFiltered);
+    connect(this, &MainWidget::filterReset,
+            kanjiList, &KanjiListWidget::onFilterReset);
 }
