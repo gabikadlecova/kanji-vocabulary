@@ -2,7 +2,10 @@
 #define TRAINWIDGET_H
 
 #include <QWidget>
-#include <QGridLayout>
+#include <QVBoxLayout>
+#include <QSplitter>
+#include <QLabel>
+
 #include <vector>
 
 #include "kanjiapp/KanjiData.h"
@@ -19,17 +22,29 @@ class TrainWidget : public QWidget
 
 public:
     explicit TrainWidget(QWidget *parent = nullptr);
-    ~TrainWidget();
+    virtual ~TrainWidget() override;
+    int pageId;
+
+signals:
+    void customMenuShown(QSplitter *menu);
+    void customMenuHidden();
+
+    void trainingEnded();
 
 public slots:
-    void setTrainKanji(std::vector<kcomp> newTraining);
+    void onTrainKanjiSet(std::vector<kcomp> newTraining);
 
 private:
+    virtual void showEvent(QShowEvent *e) override;
+    virtual void hideEvent(QHideEvent *e) override;
+
     void setupLayout();
     void setupButtons();
     void setupTrainPage();
 
-    QGridLayout *l;
+    QVBoxLayout *l;
+    QSplitter *menu;
+    QLabel *kanjiText;
 
     std::vector<kcomp> trainKanji;
 

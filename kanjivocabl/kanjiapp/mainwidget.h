@@ -2,6 +2,7 @@
 #define MAINWIDGET_H
 
 #include <QWidget>
+#include <QVBoxLayout>
 #include <QStack>
 #include <QVector>
 #include <QSplitter>
@@ -44,6 +45,9 @@ private slots:
     void onHomeButtonClicked();
     void onBackButtonClicked();
 
+    void onCustomMenu(QSplitter *newMenu);
+    void onDefaultMenu();
+
     void onKanjiDeleted(kcomp::kanji_id id);
     void onKanjiChanged(kcomp kc);
     void onKanjiAdded(kcomp kc);
@@ -59,7 +63,11 @@ private:
     QVector<kcomp> kanji_v;
 
     FilterDialog *d;
+
+    QVBoxLayout *l;
     QSplitter *menuSplitter;
+    QSplitter *altMenuSplitter;
+
     QStackedWidget *pageStack;
     QStack<int> idStack;
 

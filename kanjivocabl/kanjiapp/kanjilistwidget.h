@@ -65,6 +65,7 @@ public:
     using kcomp = kanji_data::kanji_compound;
 
     explicit KanjiListModel(QVector<kcomp> kanji, QObject *parent = nullptr);
+    virtual ~KanjiListModel() override = default;
 
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     virtual QVariant data(const QModelIndex &index, int role) const override;

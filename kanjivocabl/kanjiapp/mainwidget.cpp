@@ -3,19 +3,19 @@
 
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
-
+#include "trainwidget.h"
 
 #include "detailswidget.h"
 #include "editwidget.h"
 #include "addkanjiwidget.h"
 
-#include <QVBoxLayout>
 #include <QPushButton>
 
 MainWidget::MainWidget(kanji_data::kanji_lib lib,
                        QWidget *parent) :
     QWidget(parent),
     lib(lib),
+    altMenuSplitter(nullptr),
     d(new FilterDialog(this)),
     ui(new Ui::MainWidget)
 {
@@ -65,6 +65,29 @@ void MainWidget::onBackButtonClicked() {
 
 }
 
+void MainWidget::onCustomMenu(QSplitter *newMenu)
+{
+    l->removeWidget(menuSplitter);
+    if (newMenu != nullptr) {
+        l->insertWidget(0, newMenu);
+        newMenu->show();
+    }
+
+    menuSplitter->hide();
+    altMenuSplitter = newMenu;
+}
+
+void MainWidget::onDefaultMenu()
+{
+    if (altMenuSplitter != nullptr) {
+        l->removeWidget(altMenuSplitter);
+        altMenuSplitter->hide();
+        altMenuSplitter = nullptr;
+    }
+
+    l->insertWidget(0, menuSplitter);
+    menuSplitter->show();
+}
 
 void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
@@ -128,48 +151,49 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 }
 
 void MainWidget::setupLayout() {
-    QVBoxLayout *l = new QVBoxLayout();
-
-    /* menu : page = 1 : 10 */
+    l = new QVBoxLayout();
 
     // menu setup
     setupMenu();
-    QSizePolicy sizeUpper(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    sizeUpper.setVerticalStretch(1);
-    menuSplitter->setSizePolicy(sizeUpper);
-
-    l->addWidget(menuSplitter);
 
     // page setup
     setupPage();
-    QSizePolicy sizeLower(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    sizeLower.setVerticalStretch(20);
-    pageStack->setSizePolicy(sizeLower);
-
-    l->addWidget(pageStack);
 
     // set as Widget layout
     setLayout(l);
 }
 
 void MainWidget::setupMenu() {
+    QSizePolicy menuPolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+
     menuSplitter = new QSplitter(Qt::Orientation::Horizontal);
 
+    // home button
     QPushButton *homeButton = new QPushButton("Home");
+    homeButton->setSizePolicy(menuPolicy);
+
     menuSplitter->addWidget(homeButton);
     connect(homeButton, &QPushButton::clicked, this, &MainWidget::onHomeButtonClicked);
 
+    // back button
     QPushButton *backButton = new QPushButton("Back");
+    backButton->setSizePolicy(menuPolicy);
+
     menuSplitter->addWidget(backButton);
 
+    // menu connects
     connect(backButton, &QPushButton::clicked, this, &MainWidget::onBackButtonClicked);
     connect(this, &MainWidget::pageOpened, backButton, &QPushButton::show);
     connect(this, &MainWidget::homeOpened, backButton, &QPushButton::hide);
 
     backButton->hide();
 
+    // button policy
     QFrame *fr = new QFrame();
     menuSplitter->addWidget(fr);
+    menuSplitter->setSizePolicy(menuPolicy);
+
+    l->addWidget(menuSplitter);
 }
 
 void MainWidget::setupPage() {
@@ -189,6 +213,21 @@ void MainWidget::setupPage() {
 
     connect(kanjiList, &KanjiListWidget::detailsPageRequested, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
+
+    // train MESSY, REWRITE (viz note)
+    TrainWidget *tw = new TrainWidget();
+
+    tw->pageId = pageStack->count();
+    kv->addWidget("Train", tw);
+
+    connect(tw, &TrainWidget::trainingEnded,
+            this, &MainWidget::onHomeButtonClicked);
+
+    connect(tw, &TrainWidget::customMenuShown,
+            this, &MainWidget::onCustomMenu);
+    connect(tw, &TrainWidget::customMenuHidden,
+            this, &MainWidget::onDefaultMenu);
+
 
     // filter dialog
     connect(kanjiList, &KanjiListWidget::filterDialogRequested,
@@ -250,4 +289,11 @@ void MainWidget::setupPage() {
             kanjiList, &KanjiListWidget::onKanjiFiltered);
     connect(this, &MainWidget::filterReset,
             kanjiList, &KanjiListWidget::onFilterReset);
+
+
+    // pageStack setup
+    QSizePolicy sizeLower(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    pageStack->setSizePolicy(sizeLower);
+
+    l->addWidget(pageStack);
 }
