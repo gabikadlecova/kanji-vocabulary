@@ -216,8 +216,6 @@ void MainWidget::setupPage() {
 
     // train MESSY, REWRITE (viz note)
     TrainWidget *tw = new TrainWidget();
-
-    tw->pageId = pageStack->count();
     kv->addWidget("Train", tw);
 
     connect(tw, &TrainWidget::trainingEnded,
