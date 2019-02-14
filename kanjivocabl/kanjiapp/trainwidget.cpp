@@ -28,6 +28,9 @@ void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
 void TrainWidget::onFlipClicked()
 {
     flipButton->hide();
+
+    kanjiReading->show();
+    kanjiMeaning->show();
     feedbackSplitter->show();
 
     flipped = true;
@@ -42,11 +45,33 @@ void TrainWidget::onResponseSelected(FlipResponse fr)
 
     // train succeeded
     currKanji->repeat(fr == FlipResponse::yes);
-    validId.erase(std::remove_if(validId.begin(), validId.end(),
-                                 [=](kcomp::kanji_id id) {
-                      return currKanji->get_id() == id;
-                  }),
-                  validId.end());
+    history.push_back(currKanji->get_id());
+
+    // find next id
+    auto idIt = std::find_if(validId.begin(), validId.end(),
+                 [=](kcomp::kanji_id id) {
+        return currKanji->get_id() == id;
+    });
+
+    bool end = idIt + 1 == validId.end();
+
+    // start a new train cycle or finish training
+    if (end) {
+        validId.erase(idIt);
+
+        newCycle();
+        return;
+    }
+
+    // next kanji compound
+    kcomp::kanji_id nextId = *(idIt + 1);
+    currKanji = std::find_if(currKanji, trainKanji.end(), [=](const kcomp &kc) {
+        return kc.get_id() == nextId;
+    });
+
+    // update page
+    updateKanjiLabels();
+    flipBack();
 }
 
 void TrainWidget::showEvent(QShowEvent *e)
@@ -97,20 +122,33 @@ void TrainWidget::setupButtons()
 
 void TrainWidget::setupTrainPage()
 {
-    kanjiText = new QLabel("todo");
-
+    kanjiText = new QLabel();
     kanjiText->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    l->addWidget(kanjiText);
+    connect(this, &TrainWidget::kanjiChanged,
+            kanjiText, &QLabel::setText);
 
     flipButton = new QPushButton("Flip");
     connect(flipButton, &QPushButton::clicked,
             this, &TrainWidget::onFlipClicked);
 
+    // add widgets
+    l->addWidget(kanjiText);
     l->addWidget(flipButton);
+}
 
-    // hidden buttons
+void TrainWidget::setupFlippedPage()
+{
+    // kanji reading and meaning
+    kanjiReading = new QLabel();
+    connect(this, &TrainWidget::kanjiReadingChanged,
+            kanjiReading, &QLabel::setText);
+
+    kanjiMeaning = new QLabel();
+    connect(this, &TrainWidget::kanjiMeaningChanged,
+            kanjiMeaning, &QLabel::setText);
+
+    // training buttons
     feedbackSplitter = new QSplitter();
-    feedbackSplitter->hide();
 
     QPushButton *yesButton = new QPushButton("Yes");
     connect(yesButton, &QPushButton::clicked,
@@ -134,5 +172,11 @@ void TrainWidget::setupTrainPage()
     feedbackSplitter->addWidget(maybeButton);
     feedbackSplitter->addWidget(noButton);
 
+    l->addWidget(kanjiReading);
+    l->addWidget(kanjiMeaning);
     l->addWidget(feedbackSplitter);
+
+    kanjiReading->hide();
+    kanjiMeaning->hide();
+    feedbackSplitter->hide();
 }

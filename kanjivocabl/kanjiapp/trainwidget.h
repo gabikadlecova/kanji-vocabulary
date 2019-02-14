@@ -33,6 +33,10 @@ signals:
     void customMenuShown(QSplitter *menu);
     void customMenuHidden();
 
+    void kanjiChanged(const QString &k);
+    void kanjiMeaningChanged(const QString &m);
+    void kanjiReadingChanged(const QString &r);
+
     void trainingStarted();
     void trainingEnded(const std::vector<kcomp> &result);
     void trainingDiscarded();
@@ -51,10 +55,18 @@ private:
     void setupLayout();
     void setupButtons();
     void setupTrainPage();
+    void setupFlippedPage();
+
+    void updateKanjiLabels();
+    void newCycle();
+    void flipBack();
 
     QVBoxLayout *l;
     QSplitter *menu;
     QLabel *kanjiText;
+
+    QLabel *kanjiReading;
+    QLabel *kanjiMeaning;
 
     QPushButton *flipButton;
     QSplitter *feedbackSplitter;
