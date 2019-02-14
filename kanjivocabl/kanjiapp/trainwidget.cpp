@@ -26,7 +26,8 @@ void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
     // to enable "go back"
     resKanji = trainKanji;
     history.clear();
-    std::transform(trainKanji.begin(), trainKanji.end(), std::back_inserter(validId),
+    std::transform(trainKanji.begin(), trainKanji.end(),
+                   std::inserter(validId, validId.begin()),
                    [](const kcomp &kc){ return kc.get_id(); });
 
     newCycle();
@@ -46,22 +47,22 @@ void TrainWidget::onFlipClicked()
 void TrainWidget::onResponseSelected(FlipResponse fr)
 {
     // skip if unsure
-    if (fr == FlipResponse::maybe) {
-        return;
+    if (fr != FlipResponse::maybe) {
+
+        // train succeeded
+        auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
+                                 [=](const kcomp &kc){
+            return kc.get_id() == currKanji->get_id();
+        });
+
+        trainedIt->repeat(fr == FlipResponse::yes);
+
+        validId.erase(currKanji->get_id());
     }
 
-    // train succeeded
-    auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
-                             [=](const kcomp &kc){
-        return kc.get_id() == currKanji->get_id();
-    });
-
-    trainedIt->repeat(fr == FlipResponse::yes);
     history.push_back(currKanji->get_id());
 
-    validId.erase(currKanji->get_id());
-
-    currKanji = std::find_if(currKanji, trainKanji.end(), [&](const kcomp &kc) {
+    currKanji = std::find_if(currKanji + 1, trainKanji.end(), [&](const kcomp &kc) {
         return validId.find(kc.get_id()) != validId.end();
     });
 

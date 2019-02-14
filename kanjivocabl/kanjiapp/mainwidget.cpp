@@ -152,7 +152,22 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 
 void MainWidget::onTrainingRequested()
 {
+    auto trainKanji = kanji_data::due_today(lib);
+    emit trainingDataChanged(std::move(trainKanji));
+}
 
+void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
+{
+    std::for_each(trainedKanji.begin(), trainedKanji.end(), [=](const kcomp &kc){
+        lib.update_kanji(kc);
+    });
+
+    onTrainingFinished();
+}
+
+void MainWidget::onTrainingFinished()
+{
+    onHomeButtonClicked();
 }
 
 void MainWidget::setupLayout() {
