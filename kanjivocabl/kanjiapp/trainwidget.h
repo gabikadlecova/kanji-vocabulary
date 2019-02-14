@@ -8,7 +8,7 @@
 #include <QPushButton>
 
 #include <vector>
-#include <stack>
+#include <set>
 
 #include "kanjiapp/KanjiData.h"
 
@@ -33,10 +33,12 @@ signals:
     void customMenuShown(QSplitter *menu);
     void customMenuHidden();
 
+    // used in this widget
     void kanjiChanged(const QString &k);
     void kanjiMeaningChanged(const QString &m);
     void kanjiReadingChanged(const QString &r);
 
+    // need to be connected
     void trainingStarted();
     void trainingEnded(const std::vector<kcomp> &result);
     void trainingDiscarded();
@@ -47,6 +49,8 @@ public slots:
 private slots:
     void onFlipClicked();
     void onResponseSelected(FlipResponse fr);
+    void onTrainingEndClicked();
+    void onBackButtonClicked();
 
 private:
     virtual void showEvent(QShowEvent *e) override;
@@ -72,8 +76,9 @@ private:
     QSplitter *feedbackSplitter;
 
     std::vector<kcomp> trainKanji;
+    std::vector<kcomp> resKanji;
     std::vector<kcomp::kanji_id> history;
-    std::vector<kcomp::kanji_id> validId;
+    std::set<kcomp::kanji_id> validId;
 
     std::vector<kcomp>::iterator currKanji;
 

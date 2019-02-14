@@ -39,6 +39,7 @@ signals:
     void kanjiChanged(kcomp kc);
     void kanjiFiltered(QVector<kcomp> newFilter);
     void filterReset();
+    void trainingDataChanged(std::vector<kcomp> trainKanji);
 
 private slots:
     void onPageChanged(int pageId);
@@ -53,6 +54,9 @@ private slots:
     void onKanjiAdded(kcomp kc);
 
     void onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal);
+    void onTrainingRequested();
+    void onTrainingSubmitted(const std::vector<kcomp> &trainedKanji);
+    void onTrainingFinished();
 
 private:
     void setupLayout();

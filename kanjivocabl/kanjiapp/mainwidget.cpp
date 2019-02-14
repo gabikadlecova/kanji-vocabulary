@@ -150,6 +150,11 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
     emit kanjiFiltered(QVector<kcomp>::fromStdVector(std::move(filterRes)));
 }
 
+void MainWidget::onTrainingRequested()
+{
+
+}
+
 void MainWidget::setupLayout() {
     l = new QVBoxLayout();
 
@@ -226,6 +231,18 @@ void MainWidget::setupPage() {
     connect(tw, &TrainWidget::customMenuHidden,
             this, &MainWidget::onDefaultMenu);
 
+
+    connect(tw, &TrainWidget::trainingStarted,
+            this, &MainWidget::onTrainingRequested);
+
+    connect(this, &MainWidget::trainingDataChanged,
+            tw, &TrainWidget::onTrainKanjiSet);
+
+    connect(tw, &TrainWidget::trainingEnded,
+            this, &MainWidget::onTrainingSubmitted);
+
+    connect(tw, &TrainWidget::trainingDiscarded,
+            this, &MainWidget::onTrainingFinished);
 
     // filter dialog
     connect(kanjiList, &KanjiListWidget::filterDialogRequested,

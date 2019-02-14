@@ -1,6 +1,8 @@
 #include "trainwidget.h"
 #include "ui_trainwidget.h"
 
+#include <QMessageBox>
+
 #include <algorithm>
 
 TrainWidget::TrainWidget(QWidget *parent) :
@@ -20,9 +22,14 @@ TrainWidget::~TrainWidget()
 void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
 {
     trainKanji = std::move(newTraining);
+
+    // to enable "go back"
+    resKanji = trainKanji;
     history.clear();
     std::transform(trainKanji.begin(), trainKanji.end(), std::back_inserter(validId),
                    [](const kcomp &kc){ return kc.get_id(); });
+
+    newCycle();
 }
 
 void TrainWidget::onFlipClicked()
@@ -44,34 +51,80 @@ void TrainWidget::onResponseSelected(FlipResponse fr)
     }
 
     // train succeeded
-    currKanji->repeat(fr == FlipResponse::yes);
-    history.push_back(currKanji->get_id());
-
-    // find next id
-    auto idIt = std::find_if(validId.begin(), validId.end(),
-                 [=](kcomp::kanji_id id) {
-        return currKanji->get_id() == id;
+    auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
+                             [=](const kcomp &kc){
+        return kc.get_id() == currKanji->get_id();
     });
 
-    bool end = idIt + 1 == validId.end();
+    trainedIt->repeat(fr == FlipResponse::yes);
+    history.push_back(currKanji->get_id());
 
-    // start a new train cycle or finish training
-    if (end) {
-        validId.erase(idIt);
+    validId.erase(currKanji->get_id());
 
+    currKanji = std::find_if(currKanji, trainKanji.end(), [&](const kcomp &kc) {
+        return validId.find(kc.get_id()) != validId.end();
+    });
+
+    // start a new training cycle (some might have been skipped)
+    if (currKanji == trainKanji.end()) {
         newCycle();
         return;
     }
 
-    // next kanji compound
-    kcomp::kanji_id nextId = *(idIt + 1);
-    currKanji = std::find_if(currKanji, trainKanji.end(), [=](const kcomp &kc) {
-        return kc.get_id() == nextId;
-    });
-
     // update page
     updateKanjiLabels();
     flipBack();
+}
+
+void TrainWidget::onTrainingEndClicked()
+{
+    QMessageBox endBox;
+    endBox.setText("Training exit");
+    endBox.setInformativeText("Do you want to save training progress?");
+    endBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    endBox.setDefaultButton(QMessageBox::Cancel);
+
+    auto res = endBox.exec();
+    switch (res) {
+        case QMessageBox::Cancel:
+            return;
+        case QMessageBox::Yes:
+            emit trainingEnded(trainKanji);
+            return;
+        case QMessageBox::No:
+            emit trainingDiscarded();
+            return;
+    }
+}
+
+void TrainWidget::onBackButtonClicked()
+{
+    if (history.size() == 0) {
+        return;
+    }
+
+    if (flipped) {
+        flipBack();
+        return;
+    }
+
+    // revert training
+    auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
+                             [=](const kcomp &kc){
+        return kc.get_id() == currKanji->get_id();
+    });
+    *trainedIt = *currKanji;
+
+    kcomp::kanji_id bef = history[history.size() - 1];
+    history.pop_back();
+
+    // find the previous kanji
+    currKanji = std::find_if(trainKanji.begin(), trainKanji.end(),
+                             [=](const kcomp &kc){
+        return kc.get_id() == bef;
+    });
+
+    updateKanjiLabels();
 }
 
 void TrainWidget::showEvent(QShowEvent *e)
@@ -83,6 +136,8 @@ void TrainWidget::showEvent(QShowEvent *e)
 void TrainWidget::hideEvent(QHideEvent *e)
 {
     emit customMenuHidden();
+
+    // could be emitted (save training,...)
     emit trainingDiscarded();
 }
 
@@ -92,6 +147,7 @@ void TrainWidget::setupLayout()
 
     setupButtons();
     setupTrainPage();
+    setupFlippedPage();
 
     setLayout(l);
 }
@@ -107,12 +163,15 @@ void TrainWidget::setupButtons()
     QPushButton *backButton = new QPushButton("Back");
     backButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
+    connect(backButton, &QPushButton::clicked,
+            this, &TrainWidget::onBackButtonClicked);
+
     // end
     QPushButton *endButton = new QPushButton("End training");
     endButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
 
     connect(endButton, &QPushButton::clicked,
-            this, &TrainWidget::trainingEnded);
+            this, &TrainWidget::onTrainingEndClicked);
 
     menu->addWidget(backButton);
     menu->addWidget(endButton);
@@ -179,4 +238,41 @@ void TrainWidget::setupFlippedPage()
     kanjiReading->hide();
     kanjiMeaning->hide();
     feedbackSplitter->hide();
+}
+
+void TrainWidget::updateKanjiLabels()
+{
+    emit kanjiChanged(QString::fromStdWString(currKanji->get_kanji()));
+    emit kanjiMeaningChanged(QString::fromStdWString(currKanji->meaning));
+    emit kanjiReadingChanged(QString::fromStdWString(currKanji->reading));
+}
+
+void TrainWidget::newCycle()
+{
+    currKanji = std::find_if(trainKanji.begin(), trainKanji.end(),
+                             [&](const kcomp &kc) {
+        return validId.find(kc.get_id()) != validId.end();
+    });
+
+    // all trained, return modified kanji
+    if (currKanji == trainKanji.end()) {
+        emit trainingEnded(trainKanji);
+        return;
+    }
+
+    updateKanjiLabels();
+    if (flipped) {
+        flipBack();
+    }
+}
+
+void TrainWidget::flipBack()
+{
+    flipButton->show();
+
+    kanjiReading->hide();
+    kanjiMeaning->hide();
+    feedbackSplitter->hide();
+
+    flipped = false;
 }
