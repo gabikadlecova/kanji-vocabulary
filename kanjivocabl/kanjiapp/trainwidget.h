@@ -39,7 +39,6 @@ signals:
     void kanjiReadingChanged(const QString &r);
 
     // need to be connected
-    void trainingStarted();
     void trainingEnded(const std::vector<kcomp> &result);
     void trainingDiscarded();
 

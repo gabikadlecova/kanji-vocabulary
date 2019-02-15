@@ -25,6 +25,7 @@ signals:
     void kanjiReadingChanged(const QString &text);
     void kanjiMeaningChanged(const QString &text);
     void kanjiLevelChanged(kcomp::kanji_level level);
+    void kanjiLastRepChanged(const QString &time);
 
     void editPageRequested(int pageId);
     void kanjiDeletionRequested(kcomp::kanji_id kanjiId);

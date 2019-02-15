@@ -38,6 +38,7 @@ void MainWidget::onPageChanged(int pageId) {
     idStack.push(pageId);
 
     emit pageOpened();
+    emit pageNumberOpened(pageId);
 }
 
 void MainWidget::onHomeButtonClicked() {
@@ -161,6 +162,7 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 void MainWidget::onTrainingRequested()
 {
     auto trainKanji = kanji_data::due_today(lib);
+
     emit trainingDataChanged(std::move(trainKanji));
 }
 
@@ -273,6 +275,7 @@ void MainWidget::setupPage() {
 
     // train MESSY, REWRITE (viz note)
     TrainWidget *tw = new TrainWidget();
+    int trainId = pageStack->count();
     kv->addWidget("Train", tw);
 
     QPushButton *loadButton = new QPushButton("Load data");
@@ -307,8 +310,12 @@ void MainWidget::setupPage() {
             this, &MainWidget::onDefaultMenu);
 
 
-    connect(tw, &TrainWidget::trainingStarted,
-            this, &MainWidget::onTrainingRequested);
+    connect(this, &MainWidget::pageNumberOpened,
+            this, [=](int pageId){
+        if (pageId == trainId) {
+            this->onTrainingRequested();
+        }
+    });
 
     connect(this, &MainWidget::trainingDataChanged,
             tw, &TrainWidget::onTrainKanjiSet);

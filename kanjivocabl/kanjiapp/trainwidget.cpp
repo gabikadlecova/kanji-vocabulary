@@ -30,6 +30,17 @@ void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
                    std::inserter(validId, validId.begin()),
                    [](const kcomp &kc){ return kc.get_id(); });
 
+
+    if (trainKanji.size() == 0) {
+        QMessageBox noTrainBox;
+        noTrainBox.setText("No training kanji available.");
+        noTrainBox.setInformativeText("Wait until there are kanji available for the training.");
+        noTrainBox.exec();
+
+        emit trainingDiscarded();
+        return;
+    }
+
     newCycle();
 }
 
@@ -131,15 +142,11 @@ void TrainWidget::onBackButtonClicked()
 void TrainWidget::showEvent(QShowEvent *e)
 {
     emit customMenuShown(menu);
-    emit trainingStarted();
 }
 
 void TrainWidget::hideEvent(QHideEvent *e)
 {
     emit customMenuHidden();
-
-    // could be emitted (save training,...)
-    emit trainingDiscarded();
 }
 
 void TrainWidget::setupLayout()
@@ -257,7 +264,7 @@ void TrainWidget::newCycle()
 
     // all trained, return modified kanji
     if (currKanji == trainKanji.end()) {
-        emit trainingEnded(trainKanji);
+        emit trainingEnded(resKanji);
         return;
     }
 

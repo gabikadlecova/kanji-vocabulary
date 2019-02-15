@@ -59,6 +59,7 @@ void kanji_data::kanji_lib::delete_kanji(kanji_compound::kanji_id id) {
 
 std::vector<kanji_data::kanji_compound> kanji_data::by_kanji(const kanji_lib &lib, const std::wstring &k) {
 	std::vector<kanji_compound> kanji_k;
+
     std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
                  std::back_inserter(kanji_k),
                  [&](const kanji_compound &kc) {

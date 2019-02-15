@@ -1,6 +1,10 @@
 #include <QLabel>
 #include <QPushButton>
 
+#include <iomanip>
+#include <ctime>
+#include <sstream>
+
 #include "detailswidget.h"
 #include "ui_detailswidget.h"
 
@@ -28,6 +32,15 @@ void DetailsWidget::onKanjiChanged(kcomp &kc)
     emit kanjiReadingChanged(QString::fromWCharArray(kc.reading.c_str()));
     emit kanjiMeaningChanged(QString::fromWCharArray(kc.meaning.c_str()));
     emit kanjiLevelChanged(kc.get_level());
+
+    auto time = std::chrono::system_clock::to_time_t(kc.get_last_rep());
+
+    std::string time_str;
+    std::stringstream ss;
+
+    ss << std::put_time(std::localtime(&time), "%d/%m/%Y");
+
+    emit kanjiLastRepChanged(QString::fromStdString(ss.str()));
 }
 
 void DetailsWidget::onEditClicked()
@@ -62,11 +75,15 @@ void DetailsWidget::setupKanjiData()
     QLabel *meaning_l = new QLabel();
     connect(this, &DetailsWidget::kanjiMeaningChanged, meaning_l, &QLabel::setText);
 
+    QLabel *lastRep_l = new QLabel();
+    connect(this, &DetailsWidget::kanjiLastRepChanged, lastRep_l, &QLabel::setText);
+
     // TODO level
 
     l->addWidget(kanji_l);
     l->addWidget(reading_l);
     l->addWidget(meaning_l);
+    l->addWidget(lastRep_l);
     // TODO add level
 
 }

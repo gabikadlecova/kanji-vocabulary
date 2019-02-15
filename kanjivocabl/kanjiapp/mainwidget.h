@@ -31,6 +31,7 @@ public:
 
 signals:
     void pageOpened();
+    void pageNumberOpened(int pageNo);
     void homeOpened();
 
     void kanjiLoaded(QVector<kcomp> kanji);
