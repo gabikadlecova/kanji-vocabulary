@@ -4,8 +4,8 @@
 #include <QWidget>
 #include <QStackedWidget>
 #include <QGridLayout>
+#include <QPushButton>
 
-#include <string>
 
 namespace Ui {
 class KanjiWidget;
@@ -20,6 +20,7 @@ public:
     ~KanjiWidget();
 
     int addWidget(const QString &name, QWidget *widget, const QIcon *icon = nullptr);
+    void addButton(QPushButton *button);
 
 signals:
     void pageButtonClicked(int buttonId);

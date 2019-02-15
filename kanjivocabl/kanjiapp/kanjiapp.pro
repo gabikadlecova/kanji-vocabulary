@@ -41,7 +41,8 @@ SOURCES += \
     mainwidget.cpp \
     trainwidget.cpp \
     addkanjiwidget.cpp \
-    filterdialog.cpp
+    filterdialog.cpp \
+    kanjiapp/iolib.cpp
 
 HEADERS += \
         kanjiwidget.h \
@@ -58,7 +59,8 @@ HEADERS += \
     mainwidget.h \
     trainwidget.h \
     addkanjiwidget.h \
-    filterdialog.h
+    filterdialog.h \
+    kanjiapp/iolib.h
 
 FORMS += \
         kanjiwidget.ui \

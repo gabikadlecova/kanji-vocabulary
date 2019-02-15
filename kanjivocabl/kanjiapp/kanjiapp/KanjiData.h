@@ -76,6 +76,7 @@ namespace kanji_data
 	std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r);
 	std::vector<kanji_compound> due_today(const kanji_lib &lib);
 
+    kanji_lib empty_lib();
 	kanji_lib read_lib(std::wistream &is);
 	void write_lib(const kanji_lib &lib, std::wostream &wos);
 }

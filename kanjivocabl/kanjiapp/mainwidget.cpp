@@ -10,17 +10,17 @@
 #include "addkanjiwidget.h"
 
 #include <QPushButton>
+#include <QMessageBox>
 
-MainWidget::MainWidget(kanji_data::kanji_lib lib,
-                       QWidget *parent) :
+MainWidget::MainWidget(QWidget *parent) :
     QWidget(parent),
-    lib(lib),
-    altMenuSplitter(nullptr),
+    lm(new LibManip(this)),
+    lib(kanji_data::empty_lib()),
     d(new FilterDialog(this)),
+    altMenuSplitter(nullptr),
     ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
-    kanji_v = QVector<kanji_data::kanji_compound>::fromStdVector(lib.get_kanji());
 
     connect(d, &FilterDialog::filterConfirmed,
             this, &MainWidget::onKanjiFiltered);
@@ -93,6 +93,7 @@ void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
     // erase from lib only here
     lib.delete_kanji(id);
+    emit dataSaved(lib);
 
     // TODO handle errs
 
@@ -103,6 +104,7 @@ void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 void MainWidget::onKanjiChanged(kcomp kc)
 {
     lib.update_kanji(std::move(kc));
+    emit dataSaved(lib);
 
     // TODO errors
     // TODO go back?
@@ -114,6 +116,7 @@ void MainWidget::onKanjiAdded(kcomp kc)
     auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
                                 std::move(kc.reading),
                                 std::move(kc.meaning));
+    emit dataSaved(lib);
 
     // TODO errors
     emit kanjiAdded(new_kc);
@@ -121,9 +124,14 @@ void MainWidget::onKanjiAdded(kcomp kc)
 }
 
 void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
-{
+{  
     std::vector<kcomp> filterRes;
     using Mode = FilterDialog::FilterMode;
+
+    if (fm != Mode::none && filterVal == "") {
+        emit kanjiFiltered(QVector<kcomp>());
+        return;
+    }
 
     switch (fm) {
         case Mode::byKanji:
@@ -161,6 +169,7 @@ void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
     std::for_each(trainedKanji.begin(), trainedKanji.end(), [=](const kcomp &kc){
         lib.update_kanji(kc);
     });
+    emit dataSaved(lib);
 
     onTrainingFinished();
 }
@@ -168,6 +177,32 @@ void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
 void MainWidget::onTrainingFinished()
 {
     onHomeButtonClicked();
+}
+
+void MainWidget::onLibLoaded(kanji_data::kanji_lib lib)
+{
+    this->lib = std::move(lib);
+    emit kanjiLoaded(QVector<kcomp>::fromStdVector(this->lib.get_kanji()));
+}
+
+void MainWidget::onLoadFailed()
+{
+    QMessageBox loadFailBox;
+    loadFailBox.setText("Load failed");
+    loadFailBox.setInformativeText("No file was selected.");
+    loadFailBox.setStandardButtons(QMessageBox::Ok);
+
+    loadFailBox.exec();
+}
+
+void MainWidget::onSaveFailed()
+{
+    QMessageBox saveFailBox;
+    saveFailBox.setText("Save failed");
+    saveFailBox.setInformativeText("No file was selected.");
+    saveFailBox.setStandardButtons(QMessageBox::Ok);
+
+    saveFailBox.exec();
 }
 
 void MainWidget::setupLayout() {
@@ -229,7 +264,9 @@ void MainWidget::setupPage() {
     // TODO could be defined elsewhere (separate function...)
 
     // kanji list setup
-    auto kanjiList = new KanjiListWidget(kanji_v);
+    auto kanjiList = new KanjiListWidget(QVector<kcomp>::fromStdVector(lib.get_kanji()));
+    connect(this, &MainWidget::kanjiLoaded,
+            kanjiList, &KanjiListWidget::onKanjiLoaded);
 
     connect(kanjiList, &KanjiListWidget::detailsPageRequested, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
@@ -237,6 +274,29 @@ void MainWidget::setupPage() {
     // train MESSY, REWRITE (viz note)
     TrainWidget *tw = new TrainWidget();
     kv->addWidget("Train", tw);
+
+    QPushButton *loadButton = new QPushButton("Load data");
+    connect(loadButton, &QPushButton::clicked,
+            lm, &LibManip::onLoadData);
+
+    kv->addButton(loadButton);
+
+    // save load
+
+    connect(this, &MainWidget::dataSaved,
+            lm, &LibManip::onSaveData);
+    connect(lm, &LibManip::noSaveFileSelected,
+            this, &MainWidget::onSaveFailed);
+    connect(lm, &LibManip::noLoadFileSelected,
+            this, &MainWidget::onLoadFailed);
+
+    // end save load
+
+    // data loaded
+    connect(lm, &LibManip::dataLoaded,
+            this, &MainWidget::onLibLoaded);
+
+    // data load end
 
     connect(tw, &TrainWidget::trainingEnded,
             this, &MainWidget::onHomeButtonClicked);

@@ -8,6 +8,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 
+#include "kanjiapp/iolib.h"
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 #include "filterdialog.h"
@@ -25,21 +26,23 @@ class MainWidget : public QWidget {
     using kcomp = kanji_data::kanji_compound;
 
 public:
-    explicit MainWidget(kanji_data::kanji_lib lib,
-                        QWidget *parent = nullptr);
+    explicit MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
 signals:
     void pageOpened();
     void homeOpened();
 
-    // todo emit some of this somewhere
+    void kanjiLoaded(QVector<kcomp> kanji);
+
     void kanjiAdded(kcomp kc);
     void kanjiDeleted(kcomp::kanji_id id);
     void kanjiChanged(kcomp kc);
     void kanjiFiltered(QVector<kcomp> newFilter);
     void filterReset();
     void trainingDataChanged(std::vector<kcomp> trainKanji);
+
+    void dataSaved(const kanji_data::kanji_lib &lib);
 
 private slots:
     void onPageChanged(int pageId);
@@ -58,13 +61,17 @@ private slots:
     void onTrainingSubmitted(const std::vector<kcomp> &trainedKanji);
     void onTrainingFinished();
 
+    void onLibLoaded(kanji_data::kanji_lib lib);
+    void onLoadFailed();
+    void onSaveFailed();
+
 private:
     void setupLayout();
     void setupMenu();
     void setupPage();
 
+    LibManip *lm;
     kanji_data::kanji_lib lib;
-    QVector<kcomp> kanji_v;
 
     FilterDialog *d;
 

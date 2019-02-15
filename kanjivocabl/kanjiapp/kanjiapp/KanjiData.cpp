@@ -142,6 +142,11 @@ kanji_data::kanji_lib kanji_data::read_lib(std::wistream & is) {
 	return kanji_lib{ std::move(kanji), id };
 }
 
+kanji_data::kanji_lib kanji_data::empty_lib()
+{
+    return kanji_lib{ std::vector<kanji_compound>(), 0};
+}
+
 void write_kanji(const kanji_data::kanji_compound &kc, std::wostream &wos);
 
 void kanji_data::write_lib(const kanji_lib &lib, std::wostream &wos)

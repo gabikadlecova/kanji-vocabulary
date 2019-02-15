@@ -53,6 +53,14 @@ void KanjiListWidget::setupHeader()
     l->addWidget(filterButton, 0, 1);
 }
 
+void KanjiListWidget::onKanjiLoaded(QVector<kanji_data::kanji_compound> kanji)
+{
+    delete model;
+    model = new KanjiListModel(std::move(kanji));
+
+    listView->setModel(model);
+}
+
 void KanjiListWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
 {
     int row = model->getKanjiRow(id);
@@ -85,6 +93,7 @@ void KanjiListWidget::onKanjiAdded(kanji_data::kanji_compound kc)
 
 void KanjiListWidget::onKanjiFiltered(QVector<kanji_data::kanji_compound> filter)
 {
+    delete filterModel;
     filterModel = new KanjiListModel(std::move(filter));
     listView->setModel(filterModel);
 }

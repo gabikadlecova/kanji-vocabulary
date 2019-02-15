@@ -32,6 +32,8 @@ signals:
     void filterDialogRequested();
 
 public slots:
+    void onKanjiLoaded(QVector<kanji_data::kanji_compound> kanji);
+
     void onKanjiDeleted(kanji_data::kanji_compound::kanji_id id);
     void onKanjiAdded(kanji_data::kanji_compound kc);
     void onKanjiFiltered(QVector<kanji_data::kanji_compound> filter);

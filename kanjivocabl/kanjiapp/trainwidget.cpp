@@ -100,12 +100,12 @@ void TrainWidget::onTrainingEndClicked()
 
 void TrainWidget::onBackButtonClicked()
 {
-    if (history.size() == 0) {
+    if (flipped) {
+        flipBack();
         return;
     }
 
-    if (flipped) {
-        flipBack();
+    if (history.size() == 0) {
         return;
     }
 
