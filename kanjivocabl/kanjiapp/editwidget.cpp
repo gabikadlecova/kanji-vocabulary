@@ -43,6 +43,7 @@ void EditWidget::setupLayout()
     setupKanjiData();
     setupButtons();
 
+    l->addStretch();
     setLayout(l);
 }
 
@@ -52,14 +53,22 @@ void EditWidget::setupKanjiData()
     QLabel *kanji_l = new QLabel();
     connect(this, &EditWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
 
+
+    QLabel *readingLabel = new QLabel("Reading");
     reading_l = new QLineEdit();
     connect(this, &EditWidget::kanjiReadingChanged, reading_l, &QLineEdit::setText);
 
+    QLabel *meaningLabel = new QLabel("Meaning");
     meaning_l = new QLineEdit();
     connect(this, &EditWidget::kanjiMeaningChanged, meaning_l, &QLineEdit::setText);
 
+
     l->addWidget(kanji_l);
+
+    l->addWidget(readingLabel);
     l->addWidget(reading_l);
+
+    l->addWidget(meaningLabel);
     l->addWidget(meaning_l);
 }
 

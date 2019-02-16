@@ -38,7 +38,7 @@ void DetailsWidget::onKanjiChanged(kcomp &kc)
     std::string time_str;
     std::stringstream ss;
 
-    ss << std::put_time(std::localtime(&time), "%d/%m/%Y");
+    ss << "Last repeated: " << std::put_time(std::localtime(&time), "%d/%m/%Y");
 
     emit kanjiLastRepChanged(QString::fromStdString(ss.str()));
 }
@@ -61,6 +61,7 @@ void DetailsWidget::setupLayout()
     setupKanjiData();
     setupButtons();
 
+    l->addStretch();
     setLayout(l);
 }
 

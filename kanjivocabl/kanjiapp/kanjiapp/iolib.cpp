@@ -46,6 +46,7 @@ void LibManip::onLoadData()
 
     if (fname == "") {
         emit noLoadFileSelected();
+        return;
     }
 
     fileName = fname.toStdString();

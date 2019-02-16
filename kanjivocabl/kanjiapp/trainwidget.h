@@ -37,6 +37,7 @@ signals:
     void kanjiChanged(const QString &k);
     void kanjiMeaningChanged(const QString &m);
     void kanjiReadingChanged(const QString &r);
+    void kanjiRemainingChanged(const QString &rem);
 
     // need to be connected
     void trainingEnded(const std::vector<kcomp> &result);
@@ -56,10 +57,12 @@ private:
     virtual void hideEvent(QHideEvent *e) override;
 
     void setupLayout();
-    void setupButtons();
+    void setupMenuButtons();
     void setupTrainPage();
     void setupFlippedPage();
+    void setupButtons();
 
+    void updateRemainingLabel();
     void updateKanjiLabels();
     void newCycle();
     void flipBack();

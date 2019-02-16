@@ -41,18 +41,18 @@ void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
         return;
     }
 
+    updateRemainingLabel();
     newCycle();
 }
 
 void TrainWidget::onFlipClicked()
 {
+    flipped = true;
+
     flipButton->hide();
 
-    kanjiReading->show();
-    kanjiMeaning->show();
+    updateKanjiLabels();
     feedbackSplitter->show();
-
-    flipped = true;
 }
 
 void TrainWidget::onResponseSelected(FlipResponse fr)
@@ -69,6 +69,9 @@ void TrainWidget::onResponseSelected(FlipResponse fr)
         trainedIt->repeat(fr == FlipResponse::yes);
 
         validId.erase(currKanji->get_id());
+
+        // remaining count changed
+        updateRemainingLabel();
     }
 
     history.push_back(currKanji->get_id());
@@ -120,13 +123,6 @@ void TrainWidget::onBackButtonClicked()
         return;
     }
 
-    // revert training
-    auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
-                             [=](const kcomp &kc){
-        return kc.get_id() == currKanji->get_id();
-    });
-    *trainedIt = *currKanji;
-
     kcomp::kanji_id bef = history[history.size() - 1];
     history.pop_back();
 
@@ -135,6 +131,20 @@ void TrainWidget::onBackButtonClicked()
                              [=](const kcomp &kc){
         return kc.get_id() == bef;
     });
+
+    // revert training if necessary
+    auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
+                             [=](const kcomp &kc){
+        return kc.get_id() == currKanji->get_id();
+    });
+
+    if (trainedIt->get_level() != currKanji->get_level()) {
+        validId.insert(currKanji->get_id());
+        updateRemainingLabel();
+    }
+
+    // revert training in result
+    *trainedIt = *currKanji;
 
     updateKanjiLabels();
 }
@@ -153,14 +163,15 @@ void TrainWidget::setupLayout()
 {
     l = new QVBoxLayout();
 
-    setupButtons();
+    setupMenuButtons();
     setupTrainPage();
     setupFlippedPage();
+    setupButtons();
 
     setLayout(l);
 }
 
-void TrainWidget::setupButtons()
+void TrainWidget::setupMenuButtons()
 {
     // TODO hide menu splitter in MainWidget!
 
@@ -185,34 +196,56 @@ void TrainWidget::setupButtons()
     menu->addWidget(endButton);
 
     menu->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+
+    // this is on both flip and train
+    QLabel *remainingLabel = new QLabel();
+    connect(this, &TrainWidget::kanjiRemainingChanged,
+            remainingLabel, &QLabel::setText);
+
+
+    l->addWidget(remainingLabel);
 }
 
 void TrainWidget::setupTrainPage()
 {
     kanjiText = new QLabel();
     kanjiText->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    kanjiText->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+
+    auto font = kanjiText->font();
+    font.setPixelSize(32);
+    kanjiText->setFont(font);
+
     connect(this, &TrainWidget::kanjiChanged,
             kanjiText, &QLabel::setText);
 
-    flipButton = new QPushButton("Flip");
-    connect(flipButton, &QPushButton::clicked,
-            this, &TrainWidget::onFlipClicked);
-
     // add widgets
     l->addWidget(kanjiText);
-    l->addWidget(flipButton);
 }
 
 void TrainWidget::setupFlippedPage()
 {
     // kanji reading and meaning
     kanjiReading = new QLabel();
+    kanjiReading->setAlignment(Qt::AlignHCenter);
     connect(this, &TrainWidget::kanjiReadingChanged,
             kanjiReading, &QLabel::setText);
 
     kanjiMeaning = new QLabel();
+    kanjiMeaning->setAlignment(Qt::AlignHCenter);
     connect(this, &TrainWidget::kanjiMeaningChanged,
             kanjiMeaning, &QLabel::setText);
+
+    l->addWidget(kanjiReading);
+    l->addWidget(kanjiMeaning);
+}
+
+void TrainWidget::setupButtons()
+{
+    // flip
+    flipButton = new QPushButton("Flip");
+    connect(flipButton, &QPushButton::clicked,
+            this, &TrainWidget::onFlipClicked);
 
     // training buttons
     feedbackSplitter = new QSplitter();
@@ -239,22 +272,35 @@ void TrainWidget::setupFlippedPage()
     feedbackSplitter->addWidget(maybeButton);
     feedbackSplitter->addWidget(noButton);
 
-    l->addWidget(kanjiReading);
-    l->addWidget(kanjiMeaning);
     l->addWidget(feedbackSplitter);
+    l->addWidget(flipButton);
 
-    kanjiReading->hide();
-    kanjiMeaning->hide();
     feedbackSplitter->hide();
+}
+
+void TrainWidget::updateRemainingLabel()
+{
+    auto totalCount = trainKanji.size();
+    auto remCount = totalCount - validId.size();
+
+    QString remaining = QString("%1/%2").arg(remCount).arg(totalCount);
+
+    emit kanjiRemainingChanged(remaining);
 }
 
 void TrainWidget::updateKanjiLabels()
 {
     emit kanjiChanged(QString::fromStdWString(currKanji->get_kanji()));
-    emit kanjiMeaningChanged(QString::fromStdWString(currKanji->meaning));
-    emit kanjiReadingChanged(QString::fromStdWString(currKanji->reading));
-}
 
+    if (flipped) {
+        emit kanjiMeaningChanged(QString::fromStdWString(currKanji->meaning));
+        emit kanjiReadingChanged(QString::fromStdWString(currKanji->reading));
+    }
+    else {
+        emit kanjiMeaningChanged("");
+        emit kanjiReadingChanged("");
+    }
+}
 void TrainWidget::newCycle()
 {
     currKanji = std::find_if(trainKanji.begin(), trainKanji.end(),
@@ -276,11 +322,9 @@ void TrainWidget::newCycle()
 
 void TrainWidget::flipBack()
 {
+    flipped = false;
     flipButton->show();
 
-    kanjiReading->hide();
-    kanjiMeaning->hide();
+    updateKanjiLabels();
     feedbackSplitter->hide();
-
-    flipped = false;
 }
