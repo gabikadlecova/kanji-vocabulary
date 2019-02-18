@@ -10,11 +10,12 @@ class LibManip : public QObject
     Q_OBJECT
 
 public:
-    LibManip(QWidget *parent = nullptr);
+    LibManip(std::string defaultName = "", QWidget *parent = nullptr);
     ~LibManip() = default;
 
 signals:
     void dataLoaded(kanji_data::kanji_lib lib);
+    void loadFailed();
     void noSaveFileSelected();
     void noLoadFileSelected();
 
@@ -23,7 +24,8 @@ public slots:
     void onSaveData(const kanji_data::kanji_lib &lib);
 
 public:
-    kanji_data::kanji_lib read_lib();
+    void readLib();
+
 
 private:
     QWidget *parent;

@@ -12,9 +12,9 @@
 #include <QPushButton>
 #include <QMessageBox>
 
-MainWidget::MainWidget(QWidget *parent) :
+MainWidget::MainWidget(std::string fileName, QWidget *parent) :
     QWidget(parent),
-    lm(new LibManip(this)),
+    lm(new LibManip(fileName, this)),
     lib(kanji_data::empty_lib()),
     d(new FilterDialog(this)),
     altMenuSplitter(nullptr),
@@ -24,6 +24,23 @@ MainWidget::MainWidget(QWidget *parent) :
 
     connect(d, &FilterDialog::filterConfirmed,
             this, &MainWidget::onKanjiFiltered);
+
+    // save, load
+
+    connect(this, &MainWidget::dataSaved,
+            lm, &LibManip::onSaveData);
+    connect(lm, &LibManip::noSaveFileSelected,
+            this, &MainWidget::onSaveFailed);
+    connect(lm, &LibManip::noLoadFileSelected,
+            this, &MainWidget::onLoadFailed);
+    connect(lm, &LibManip::dataLoaded,
+            this, &MainWidget::onLibLoaded);
+    connect(lm, &LibManip::loadFailed,
+            this, &MainWidget::onBadFormat);
+
+    if (fileName != "") {
+        lm->readLib();
+    }
 
     setupLayout();
 }
@@ -114,14 +131,22 @@ void MainWidget::onKanjiChanged(kcomp kc)
 
 void MainWidget::onKanjiAdded(kcomp kc)
 {
-    auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
-                                std::move(kc.reading),
-                                std::move(kc.meaning));
-    emit dataSaved(lib);
+    try {
+        auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
+                                    std::move(kc.reading),
+                                    std::move(kc.meaning));
+        emit dataSaved(lib);
 
-    // TODO errors
-    emit kanjiAdded(new_kc);
-    onBackButtonClicked();
+        emit kanjiAdded(new_kc);
+        onBackButtonClicked();
+    }
+    catch (const std::logic_error &e) {
+        QMessageBox addFailBox;
+        addFailBox.setText("Add failed");
+        addFailBox.setInformativeText("This word has already been added to the library.");
+        addFailBox.setStandardButtons(QMessageBox::Ok);
+        addFailBox.exec();
+    }
 }
 
 void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
@@ -172,6 +197,7 @@ void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
         lib.update_kanji(kc);
     });
     emit dataSaved(lib);
+    emit kanjiLoaded(QVector<kcomp>::fromStdVector(this->lib.get_kanji()));
 
     onTrainingFinished();
 }
@@ -185,6 +211,16 @@ void MainWidget::onLibLoaded(kanji_data::kanji_lib lib)
 {
     this->lib = std::move(lib);
     emit kanjiLoaded(QVector<kcomp>::fromStdVector(this->lib.get_kanji()));
+}
+
+void MainWidget::onBadFormat()
+{
+    QMessageBox loadFailBox;
+    loadFailBox.setText("Load failed");
+    loadFailBox.setInformativeText("Input file format is not valid.");
+    loadFailBox.setStandardButtons(QMessageBox::Ok);
+
+    loadFailBox.exec();
 }
 
 void MainWidget::onLoadFailed()
@@ -208,10 +244,36 @@ void MainWidget::onSaveFailed()
 }
 
 void MainWidget::setupLayout() {
+    setWindowTitle("Kanji vocabulary");
     l = new QVBoxLayout();
 
     // menu setup
     setupMenu();
+
+    // title setup
+    title = new QLabel("漢字");
+
+    auto titleFont = title->font();
+    titleFont.setPixelSize(32);
+    title->setFont(titleFont);
+
+    title->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+    title->setContentsMargins(0,20,0,0);
+
+    l->addWidget(title);
+
+    connect(this, &MainWidget::pageNumberOpened,
+            this, [=](int no){
+        if (no == 0) {
+            title->show();
+        }
+        else {
+            title->hide();
+        }
+    });
+
+    connect(this, &MainWidget::homeOpened,
+            title, &QLabel::show);
 
     // page setup
     setupPage();
@@ -284,20 +346,6 @@ void MainWidget::setupPage() {
 
     kv->addButton(loadButton);
 
-    // save load
-
-    connect(this, &MainWidget::dataSaved,
-            lm, &LibManip::onSaveData);
-    connect(lm, &LibManip::noSaveFileSelected,
-            this, &MainWidget::onSaveFailed);
-    connect(lm, &LibManip::noLoadFileSelected,
-            this, &MainWidget::onLoadFailed);
-
-    // end save load
-
-    // data loaded
-    connect(lm, &LibManip::dataLoaded,
-            this, &MainWidget::onLibLoaded);
 
     // data load end
 
@@ -374,6 +422,8 @@ void MainWidget::setupPage() {
             this, &MainWidget::onKanjiAdded);
     connect(this, &MainWidget::kanjiAdded,
             kanjiList, &KanjiListWidget::onKanjiAdded);
+    connect(this, &MainWidget::kanjiAdded,
+            aw, &AddKanjiWidget::onAddSucceeded);
 
     // connect to kanji list
     connect(kanjiList, &KanjiListWidget::addPageRequested,

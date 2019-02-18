@@ -3,6 +3,7 @@
 
 #include <QLabel>
 #include <QPushButton>
+#include <QMessageBox>
 
 
 EditWidget::EditWidget(QWidget *parent) :
@@ -30,6 +31,15 @@ void EditWidget::onKanjiChanged(kcomp &kc)
 
 void EditWidget::onSaveClicked()
 {
+    if (meaning_l->text() == "" || reading_l->text() == "") {
+        QMessageBox emptyBox;
+        emptyBox.setText("Cannot update kanji data");
+        emptyBox.setInformativeText("Some of the fields are empty.");
+        emptyBox.addButton(QMessageBox::Ok);
+        emptyBox.exec();
+        return;
+    }
+
     curr_kanji->meaning = meaning_l->text().toStdWString();
     curr_kanji->reading = reading_l->text().toStdWString();
 
@@ -53,6 +63,9 @@ void EditWidget::setupKanjiData()
     QLabel *kanji_l = new QLabel();
     connect(this, &EditWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
 
+    auto font = kanji_l->font();
+    font.setPixelSize(32);
+    kanji_l->setFont(font);
 
     QLabel *readingLabel = new QLabel("Reading");
     reading_l = new QLineEdit();

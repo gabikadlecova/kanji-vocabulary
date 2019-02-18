@@ -104,7 +104,7 @@ void TrainWidget::onTrainingEndClicked()
         case QMessageBox::Cancel:
             return;
         case QMessageBox::Yes:
-            emit trainingEnded(trainKanji);
+            emit trainingEnded(resKanji);
             return;
         case QMessageBox::No:
             emit trainingDiscarded();
@@ -213,7 +213,7 @@ void TrainWidget::setupTrainPage()
     kanjiText->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
 
     auto font = kanjiText->font();
-    font.setPixelSize(32);
+    font.setPixelSize(48);
     kanjiText->setFont(font);
 
     connect(this, &TrainWidget::kanjiChanged,
@@ -231,10 +231,18 @@ void TrainWidget::setupFlippedPage()
     connect(this, &TrainWidget::kanjiReadingChanged,
             kanjiReading, &QLabel::setText);
 
+    auto rFont = kanjiReading->font();
+    rFont.setPixelSize(14);
+    kanjiReading->setFont(rFont);
+
     kanjiMeaning = new QLabel();
     kanjiMeaning->setAlignment(Qt::AlignHCenter);
     connect(this, &TrainWidget::kanjiMeaningChanged,
             kanjiMeaning, &QLabel::setText);
+
+    auto mFont = kanjiMeaning->font();
+    mFont.setPixelSize(14);
+    kanjiMeaning->setFont(mFont);
 
     l->addWidget(kanjiReading);
     l->addWidget(kanjiMeaning);
