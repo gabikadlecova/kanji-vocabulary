@@ -6,8 +6,9 @@
 
 #include <QFileDialog>
 
-LibManip::LibManip(QWidget *parent) :
-    QObject(parent)
+LibManip::LibManip(std::string fileName, QWidget *parent) :
+    QObject(parent),
+    fileName(fileName)
 {
     this->parent = parent;
 }
@@ -51,15 +52,26 @@ void LibManip::onLoadData()
 
     fileName = fname.toStdString();
 
+    readLib();
+
+}
+
+void LibManip::readLib()
+{
     std::wifstream wis{ fileName };
     wis.imbue(std::locale(std::locale::empty(),
                           new std::codecvt_utf8<wchar_t, 0x10ffff, std::consume_header>));
 
-    kanji_data::kanji_lib lib = kanji_data::read_lib(wis);
+    try {
+        kanji_data::kanji_lib lib = kanji_data::read_lib(wis);
+        wis.close();
 
-    wis.close();
+        emit dataLoaded(std::move(lib));
+    }
+    catch (const std::logic_error &e) {
+        wis.close();
 
-    emit dataLoaded(std::move(lib));
-
-    // TODO errors
+        emit loadFailed();
+        return;
+    }
 }

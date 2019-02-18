@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QLabel>
 #include <QStack>
 #include <QVector>
 #include <QSplitter>
@@ -26,7 +27,7 @@ class MainWidget : public QWidget {
     using kcomp = kanji_data::kanji_compound;
 
 public:
-    explicit MainWidget(QWidget *parent = nullptr);
+    explicit MainWidget(std::string fileName = "", QWidget *parent = nullptr);
     ~MainWidget();
 
 signals:
@@ -63,6 +64,7 @@ private slots:
     void onTrainingFinished();
 
     void onLibLoaded(kanji_data::kanji_lib lib);
+    void onBadFormat();
     void onLoadFailed();
     void onSaveFailed();
 
@@ -77,6 +79,7 @@ private:
     FilterDialog *d;
 
     QVBoxLayout *l;
+    QLabel *title;
     QSplitter *menuSplitter;
     QSplitter *altMenuSplitter;
 

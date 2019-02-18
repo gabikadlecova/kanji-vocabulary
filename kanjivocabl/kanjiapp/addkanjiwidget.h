@@ -19,10 +19,13 @@ class AddKanjiWidget : public QWidget
 
 public:
     explicit AddKanjiWidget(QWidget *parent = nullptr);
-    ~AddKanjiWidget();
+    virtual ~AddKanjiWidget() override;
 
 signals:
     void kanjiAddRequested(kcomp kc);
+
+public slots:
+    void onAddSucceeded(kcomp kc);
 
 private slots:
     void onAddClicked();

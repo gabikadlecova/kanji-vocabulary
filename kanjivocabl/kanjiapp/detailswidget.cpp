@@ -31,7 +31,10 @@ void DetailsWidget::onKanjiChanged(kcomp &kc)
     emit kanjiTextChanged(QString::fromWCharArray(kc.get_kanji().c_str()));
     emit kanjiReadingChanged(QString::fromWCharArray(kc.reading.c_str()));
     emit kanjiMeaningChanged(QString::fromWCharArray(kc.meaning.c_str()));
-    emit kanjiLevelChanged(kc.get_level());
+
+    QString levelString = kc.get_level() == 1 ?
+                "Repeated after 1 day" : QString("Repeated after %1 days").arg(kc.get_level());
+    emit kanjiLevelChanged(levelString);
 
     auto time = std::chrono::system_clock::to_time_t(kc.get_last_rep());
 
@@ -70,6 +73,11 @@ void DetailsWidget::setupKanjiData()
     QLabel *kanji_l = new QLabel();
     connect(this, &DetailsWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
 
+    auto font = kanji_l->font();
+    font.setPixelSize(32);
+    kanji_l->setFont(font);
+
+
     QLabel *reading_l = new QLabel();
     connect(this, &DetailsWidget::kanjiReadingChanged, reading_l, &QLabel::setText);
 
@@ -79,14 +87,18 @@ void DetailsWidget::setupKanjiData()
     QLabel *lastRep_l = new QLabel();
     connect(this, &DetailsWidget::kanjiLastRepChanged, lastRep_l, &QLabel::setText);
 
-    // TODO level
+    QLabel *level_l = new QLabel();
+    connect(this, &DetailsWidget::kanjiLevelChanged, level_l, &QLabel::setText);
+
+    auto levelFont = level_l->font();
+    levelFont.setItalic(true);
+    level_l->setFont(levelFont);
 
     l->addWidget(kanji_l);
     l->addWidget(reading_l);
     l->addWidget(meaning_l);
     l->addWidget(lastRep_l);
-    // TODO add level
-
+    l->addWidget(level_l);
 }
 
 void DetailsWidget::setupButtons()
