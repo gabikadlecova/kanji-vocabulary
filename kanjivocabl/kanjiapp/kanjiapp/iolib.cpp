@@ -6,6 +6,9 @@
 
 #include <QFileDialog>
 
+// Construct LibManip. If the parameter isn't an empty string,
+// LibManip::readLib() or LibManip::onSaveData() can be called immediately to load
+// or save data respectively.
 LibManip::LibManip(std::string fileName, QWidget *parent) :
     QObject(parent),
     fileName(fileName)
@@ -13,7 +16,9 @@ LibManip::LibManip(std::string fileName, QWidget *parent) :
     this->parent = parent;
 }
 
-
+// Saves data to path LibManip::fileName or opens a QFileDialog for
+// path selection. If the dialog is dismissed, LibManip::noSaveFileName()
+// is emitted. The data till be encoded in utf8.
 void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
 {
     // select file for saving
@@ -28,7 +33,7 @@ void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
         fileName = fname.toStdString();
     }
 
-    // save
+    // save to file
 
     std::wofstream wos{ fileName };
     wos.imbue(std::locale(std::locale::empty(),
@@ -37,10 +42,9 @@ void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
     kanji_data::write_lib(lib, wos);
 
     wos.close();
-
-    // TODO errors
 }
 
+// Loads data from the path selected through a QFileDialog. Calls LibManip::readLib()
 void LibManip::onLoadData()
 {
     auto fname = QFileDialog::getOpenFileName(this->parent, "Open kanji data");
@@ -56,6 +60,9 @@ void LibManip::onLoadData()
 
 }
 
+// Loads data from the path LibManip::fileName.
+// The data is expected to be in utf8. Emits LibManip::dataLoaded() on
+// success and LibManip::loadFailed() on failure.
 void LibManip::readLib()
 {
     std::wifstream wis{ fileName };
@@ -69,6 +76,7 @@ void LibManip::readLib()
         emit dataLoaded(std::move(lib));
     }
     catch (const std::logic_error &e) {
+        // format error
         wis.close();
 
         emit loadFailed();
