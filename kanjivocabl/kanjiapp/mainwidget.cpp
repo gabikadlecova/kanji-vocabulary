@@ -109,23 +109,19 @@ void MainWidget::onDefaultMenu()
 
 void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
-    // erase from lib only here
+    // erase from lib
     lib.delete_kanji(id);
     emit dataSaved(lib);
 
-    // TODO handle errs
-
-    // todo go back somewhere...
     onBackButtonClicked();
 }
 
 void MainWidget::onKanjiChanged(kcomp kc)
 {
+    // update in the lib
     lib.update_kanji(std::move(kc));
     emit dataSaved(lib);
 
-    // TODO errors
-    // TODO go back?
     onBackButtonClicked();
 }
 
@@ -332,7 +328,7 @@ void MainWidget::setupPage() {
     connect(this, &MainWidget::kanjiLoaded,
             kanjiList, &KanjiListWidget::onKanjiLoaded);
 
-    connect(kanjiList, &KanjiListWidget::detailsPageRequested, this, &MainWidget::onPageChanged);
+    connect(kanjiList, &KanjiListWidget::detailPageRequested, this, &MainWidget::onPageChanged);
     kv->addWidget("Kanji list", kanjiList);
 
     // train MESSY, REWRITE (viz note)

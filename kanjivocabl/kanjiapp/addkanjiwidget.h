@@ -40,7 +40,7 @@ public slots:
 
 private slots:
     /*!
-     * \brief onAddClicked is called if the user confirms the form
+     * \brief onAddClicked is called when the user confirms the form
      */
     void onAddClicked();
 

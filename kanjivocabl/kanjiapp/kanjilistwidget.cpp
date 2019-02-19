@@ -4,23 +4,32 @@
 #include <QPushButton>
 
 
-KanjiListWidget::KanjiListWidget(QVector<kanji_data::kanji_compound> kanji,
+KanjiListWidget::KanjiListWidget(QVector<kcomp> kanji,
                                  QWidget *parent) :
     QWidget(parent),
     ui(new Ui::KanjiListWidget)
 {
     ui->setupUi(this);
 
+
+    // setup model
+
+    // initial model
     model = new KanjiListModel(std::move(kanji));
+    // no filter
     filterModel = nullptr;
 
     listView = new QListView();
     listView->setModel(model);
 
-    // connect handler to QListView signal
-    connect(listView, &QListView::clicked, this, &KanjiListWidget::onKanjiClicked);
 
+    // kanji compound selection
+    connect(listView, &QListView::clicked,
+            this, &KanjiListWidget::onKanjiClicked);
+
+    // must be set externally
     detailPageId = -1;
+    addPageId = -1;
 
     setupLayout();
 }
@@ -30,6 +39,8 @@ KanjiListWidget::~KanjiListWidget()
     delete ui;
 }
 
+
+// sets up the layout
 void KanjiListWidget::setupLayout()
 {
     l = new QGridLayout();
@@ -39,6 +50,8 @@ void KanjiListWidget::setupLayout()
     setLayout(l);
 }
 
+
+// sets up the header buttons
 void KanjiListWidget::setupHeader()
 {
     QPushButton *addButton = new QPushButton("Add kanji");
@@ -53,7 +66,9 @@ void KanjiListWidget::setupHeader()
     l->addWidget(filterButton, 0, 1);
 }
 
-void KanjiListWidget::onKanjiLoaded(QVector<kanji_data::kanji_compound> kanji)
+
+// new model loaded
+void KanjiListWidget::onKanjiLoaded(QVector<kcomp> kanji)
 {
     delete model;
     model = new KanjiListModel(std::move(kanji));
@@ -61,43 +76,50 @@ void KanjiListWidget::onKanjiLoaded(QVector<kanji_data::kanji_compound> kanji)
     listView->setModel(model);
 }
 
-void KanjiListWidget::onKanjiDeleted(kanji_data::kanji_compound::kanji_id id)
+
+// kanji compound deleted from the list
+void KanjiListWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
     int row = model->getKanjiRow(id);
 
-    // TODO check retval
     model->removeRows(row, 1);
 
+    // should be removed both from filtered and unfiltered model
     if (filterModel != nullptr) {
         row = filterModel->getKanjiRow(id);
+
+        // the kanji compound is not a part of the filtered data
         if (row == -1) {
             return;
         }
 
-        // TODO check retval
         filterModel->removeRows(row, 1);
     }
 }
 
-void KanjiListWidget::onKanjiAdded(kanji_data::kanji_compound kc)
+
+// kanji compound added to the list (not to the filtered data)
+void KanjiListWidget::onKanjiAdded(kcomp kc)
 {
     int row = model->rowCount();
 
-    // TODO check retval;
     model->insertRows(row, 1);
     model->setKanji(row, std::move(kc));
 
-    // maybe not slot directly...
     onFilterReset();
 }
 
-void KanjiListWidget::onKanjiFiltered(QVector<kanji_data::kanji_compound> filter)
+
+// filter applied
+void KanjiListWidget::onKanjiFiltered(QVector<kcomp> filter)
 {
     delete filterModel;
     filterModel = new KanjiListModel(std::move(filter));
     listView->setModel(filterModel);
 }
 
+
+// unfiltered data displayed
 void KanjiListWidget::onFilterReset()
 {
     listView->setModel(model);
@@ -105,35 +127,44 @@ void KanjiListWidget::onFilterReset()
     filterModel = nullptr;
 }
 
+
+// kanji compound selected
 void KanjiListWidget::onKanjiClicked(const QModelIndex &index)
 {
     auto &&kc = filterModel == nullptr ? model->getKanji(index) :
                                          filterModel->getKanji(index);
 
-    // change selected kanji, change stacked page id
     emit currentKanjiChanged(kc);
-    emit detailsPageRequested(detailPageId);
+    emit detailPageRequested(detailPageId);
 }
 
+
+// add kanji page
 void KanjiListWidget::onAddKanjiClicked()
 {
     emit addPageRequested(addPageId);
 }
 
+
+// filter dialog
 void KanjiListWidget::onFilterClicked()
 {
     emit filterDialogRequested();
 }
 
+
 KanjiListModel::KanjiListModel(QVector<kcomp> kanji, QObject *parent) :
     QAbstractListModel(parent), kanji(std::move(kanji)) {}
 
 
+// returns number of kanji compounds
 int KanjiListModel::rowCount(const QModelIndex &parent) const
 {
     return kanji.size();
 }
 
+
+// returns string representation of the kanji compound
 QVariant KanjiListModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid() || index.row() >= kanji.size()) {
@@ -151,11 +182,15 @@ QVariant KanjiListModel::data(const QModelIndex &index, int role) const
     }
 }
 
+
+// gets the kanji on the given row
 KanjiListModel::kcomp &KanjiListModel::getKanji(const QModelIndex &ind)
 {
     return kanji[ind.row()];
 }
 
+
+// finds the row index of the compound with id
 int KanjiListModel::getKanjiRow(kcomp::kanji_id id)
 {
     auto it = std::find_if(kanji.begin(), kanji.end(), [=](kcomp kc) {
@@ -171,9 +206,10 @@ int KanjiListModel::getKanjiRow(kcomp::kanji_id id)
     return d;
 }
 
+
+// remove rows from the model
 bool KanjiListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    // TODO retval?
     beginRemoveRows(parent, row, row + count - 1);
     kanji.erase(kanji.begin() + row, kanji.begin() + row + count);
 
@@ -181,9 +217,10 @@ bool KanjiListModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+
+// add rows to the model
 bool KanjiListModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    // TODO retval?
     beginInsertRows(parent, row, row + count - 1);
     kanji.insert(row, count, kcomp());
 
@@ -191,8 +228,9 @@ bool KanjiListModel::insertRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+
+// set data of the row
 void KanjiListModel::setKanji(int row, kcomp kc)
 {
     kanji[row] = std::move(kc);
 }
-//todo listview, connect signals as to actualize list

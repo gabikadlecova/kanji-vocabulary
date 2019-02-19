@@ -1,6 +1,8 @@
 #ifndef TRAINWIDGET_H
 #define TRAINWIDGET_H
 
+#include "kanjiapp/KanjiData.h"
+
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QSplitter>
@@ -10,17 +12,22 @@
 #include <vector>
 #include <set>
 
-#include "kanjiapp/KanjiData.h"
-
 namespace Ui {
 class TrainWidget;
 }
 
+/*!
+ * \brief The TrainWidget class represents a flashcard training page.
+ */
 class TrainWidget : public QWidget
 {
     Q_OBJECT
 
     using kcomp = kanji_data::kanji_compound;
+
+    /*!
+     * \brief The FlipResponse enum Represents the result of the training of a compound.
+     */
     enum class FlipResponse {
         yes, maybe, no
     };

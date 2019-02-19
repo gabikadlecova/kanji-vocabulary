@@ -13,6 +13,9 @@ namespace Ui {
 class FilterDialog;
 }
 
+/*!
+ * \brief The FilterDialog class represents a dialog to filter kanji compounds.
+ */
 class FilterDialog : public QDialog
 {
     Q_OBJECT
@@ -21,34 +24,60 @@ public:
     explicit FilterDialog(QWidget *parent = nullptr);
     ~FilterDialog();
 
+    /*!
+     * \brief The FilterMode enum represents different filter criteria.
+     */
     enum class FilterMode {
         none, byKanji, byReading, byMeaning
     };
 
 signals:
+    /*!
+     * \brief filterConfirmed signalizes that the filter should be applied
+     * \param mode filter mode
+     * \param param filter string if needed
+     */
     void filterConfirmed(FilterMode mode, QString param);
+    /*!
+     * \brief enableFilterVal sets filter value field enabled or disabled
+     * \param hasFilter enable/disable
+     */
     void enableFilterVal(bool hasFilter);
 
 private slots:
+    /*!
+     * \brief onFilterClicked is called when user confirms the filter dialog.
+     */
     void onFilterClicked();
+    /*!
+     * \brief onResetClicked resets the filter
+     * On reset, filterConfirmed is emitted with mode set to none
+     */
     void onResetClicked();
 
 private:
-    // TODO size should be fixed (it's weird otherwise)
-    // or change margins in setupFilter
+    /*!
+     * \brief setupLayout sets up the layout
+     */
     void setupLayout();
+    /*!
+     * \brief setupFilter sets up the filter page
+     */
     void setupFilter();
+    /*!
+     * \brief setupButtons sets up the dialog buttons
+     */
     void setupButtons();
 
     QGridLayout *l;
     QComboBox *cb;
     QLineEdit *filterVal;
-    QDialogButtonBox *box;
+    QDialogButtonBox *buttonBox;
 
-    QMap<QString, FilterMode> modeMap;
+    QMap<QString, FilterMode> modeMap; /*!< Maps filter strings to FilterMode. */
 
-    FilterMode prevMode;
-    QString prevString;
+    FilterMode prevMode; /*!< Is used to determine whether the filter changed. */
+    QString prevString; /*!< Is used to determine whether the filter string changed. */
 
     Ui::FilterDialog *ui;
 };

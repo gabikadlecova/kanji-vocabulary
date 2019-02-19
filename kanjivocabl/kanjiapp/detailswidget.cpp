@@ -1,3 +1,6 @@
+#include "detailswidget.h"
+#include "ui_detailswidget.h"
+
 #include <QLabel>
 #include <QPushButton>
 
@@ -5,8 +8,6 @@
 #include <ctime>
 #include <sstream>
 
-#include "detailswidget.h"
-#include "ui_detailswidget.h"
 
 DetailsWidget::DetailsWidget(QWidget *parent) :
     QWidget(parent),
@@ -15,7 +16,7 @@ DetailsWidget::DetailsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    editPageId = -1;
+    editPageId = -1; // must be set externally
     setupLayout();
 }
 
@@ -24,6 +25,8 @@ DetailsWidget::~DetailsWidget()
     delete ui;
 }
 
+
+// changes field of the detail page
 void DetailsWidget::onKanjiChanged(kcomp &kc)
 {
     curr_kanji = &kc;
@@ -32,31 +35,37 @@ void DetailsWidget::onKanjiChanged(kcomp &kc)
     emit kanjiReadingChanged(QString::fromWCharArray(kc.reading.c_str()));
     emit kanjiMeaningChanged(QString::fromWCharArray(kc.meaning.c_str()));
 
+    // kc can be repeated after n days from the last repetition
     QString levelString = kc.get_level() == 1 ?
-                "Repeated after 1 day" : QString("Repeated after %1 days").arg(kc.get_level());
+                "Repeated after 1 day" :
+                QString("Repeated after %1 days").arg(kc.get_level());
     emit kanjiLevelChanged(levelString);
 
+    // extract date from the timestamp
     auto time = std::chrono::system_clock::to_time_t(kc.get_last_rep());
 
-    std::string time_str;
-    std::stringstream ss;
+    std::stringstream timeStr;
+    timeStr << "Last repeated: " << std::put_time(std::localtime(&time), "%d/%m/%Y");
 
-    ss << "Last repeated: " << std::put_time(std::localtime(&time), "%d/%m/%Y");
-
-    emit kanjiLastRepChanged(QString::fromStdString(ss.str()));
+    emit kanjiLastRepChanged(QString::fromStdString(timeStr.str()));
 }
 
+
+// requests the edit page
 void DetailsWidget::onEditClicked()
 {
-    // todo connect to edit
     emit editPageRequested(editPageId);
 }
 
+
+// requests kanji deletion by id
 void DetailsWidget::onDeletionClicked()
 {
     emit kanjiDeletionRequested(curr_kanji->get_id());
 }
 
+
+// sets up the layout
 void DetailsWidget::setupLayout()
 {
     l = new QVBoxLayout();
@@ -68,10 +77,13 @@ void DetailsWidget::setupLayout()
     setLayout(l);
 }
 
+
+// sets up the detail
 void DetailsWidget::setupKanjiData()
 {
     QLabel *kanji_l = new QLabel();
-    connect(this, &DetailsWidget::kanjiTextChanged, kanji_l, &QLabel::setText);
+    connect(this, &DetailsWidget::kanjiTextChanged,
+            kanji_l, &QLabel::setText);
 
     auto font = kanji_l->font();
     font.setPixelSize(32);
@@ -79,16 +91,20 @@ void DetailsWidget::setupKanjiData()
 
 
     QLabel *reading_l = new QLabel();
-    connect(this, &DetailsWidget::kanjiReadingChanged, reading_l, &QLabel::setText);
+    connect(this, &DetailsWidget::kanjiReadingChanged,
+            reading_l, &QLabel::setText);
 
     QLabel *meaning_l = new QLabel();
-    connect(this, &DetailsWidget::kanjiMeaningChanged, meaning_l, &QLabel::setText);
+    connect(this, &DetailsWidget::kanjiMeaningChanged,
+            meaning_l, &QLabel::setText);
 
     QLabel *lastRep_l = new QLabel();
-    connect(this, &DetailsWidget::kanjiLastRepChanged, lastRep_l, &QLabel::setText);
+    connect(this, &DetailsWidget::kanjiLastRepChanged,
+            lastRep_l, &QLabel::setText);
 
     QLabel *level_l = new QLabel();
-    connect(this, &DetailsWidget::kanjiLevelChanged, level_l, &QLabel::setText);
+    connect(this, &DetailsWidget::kanjiLevelChanged,
+            level_l, &QLabel::setText);
 
     auto levelFont = level_l->font();
     levelFont.setItalic(true);
@@ -101,19 +117,22 @@ void DetailsWidget::setupKanjiData()
     l->addWidget(level_l);
 }
 
+
+// sets up the buttons
 void DetailsWidget::setupButtons()
 {
     // edit
     QPushButton *editButton = new QPushButton("Edit");
-    connect(editButton, &QPushButton::clicked, this, &DetailsWidget::onEditClicked);
+    connect(editButton, &QPushButton::clicked,
+            this, &DetailsWidget::onEditClicked);
 
     // delete
     QPushButton *deleteButton = new QPushButton("Delete");
-    connect(deleteButton, &QPushButton::clicked, this, &DetailsWidget::onDeletionClicked);
+    connect(deleteButton, &QPushButton::clicked,
+            this, &DetailsWidget::onDeletionClicked);
 
-    // TODO reset button
+    // TODO reset button - resets kanji repetition time to "now" without changing level
 
     l->addWidget(editButton);
     l->addWidget(deleteButton);
-
 }

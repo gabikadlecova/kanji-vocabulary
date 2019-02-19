@@ -3,6 +3,7 @@
 
 #include <QPushButton>
 
+
 FilterDialog::FilterDialog(QWidget *parent) :
     QDialog(parent),
     prevMode(FilterMode::none),
@@ -20,87 +21,8 @@ FilterDialog::~FilterDialog()
     delete ui;
 }
 
-// TODO QMap for ComboBox
 
-void FilterDialog::setupLayout()
-{
-    l = new QGridLayout();
-
-    setFixedSize(width(), -1);
-
-    setupFilter();
-    setupButtons();
-
-    setLayout(l);
-
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    adjustSize();
-}
-
-void FilterDialog::setupFilter()
-{
-    cb = new QComboBox();
-
-    // TODO to constants !!!
-    modeMap.insert("None", FilterMode::none);
-    modeMap.insert("By kanji", FilterMode::byKanji);
-    modeMap.insert("By reading", FilterMode::byReading);
-    modeMap.insert("By meaning", FilterMode::byMeaning);
-
-    // we want to preserve order
-    cb->addItems(QStringList{"None", "By kanji", "By reading", "By meaning"});
-
-    filterVal = new QLineEdit();
-    filterVal->setEnabled(false);
-
-    connect(cb, &QComboBox::currentTextChanged,
-            this, [&](const QString &text){
-        emit enableFilterVal(text != "None");
-    });
-
-    connect(this, &FilterDialog::enableFilterVal,
-            filterVal, &QLineEdit::setEnabled);
-
-
-    l->addWidget(cb, 0, 0);
-    l->addWidget(filterVal, 0, 1);
-}
-
-void FilterDialog::setupButtons()
-{
-    box = new QDialogButtonBox(QDialogButtonBox::Reset |
-                               QDialogButtonBox::Cancel);
-    box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    // connect - reset
-    QPushButton *resetButton = box->button(QDialogButtonBox::Reset);
-    connect(resetButton, &QPushButton::clicked,
-            this, &FilterDialog::onResetClicked);
-
-    // connect - apply
-    QPushButton *filterButton = new QPushButton("Apply");
-    connect(filterButton, &QPushButton::clicked,
-            this, &FilterDialog::onFilterClicked);
-
-    box->addButton(filterButton, QDialogButtonBox::ButtonRole::ApplyRole);
-
-    // connect - confirm
-    QPushButton *confirmButton = new QPushButton("Confirm");
-    connect(confirmButton, &QPushButton::clicked,
-            this, &FilterDialog::accept);
-    connect(confirmButton, &QPushButton::clicked,
-            this, &FilterDialog::onFilterClicked);
-
-    box->addButton(confirmButton, QDialogButtonBox::ButtonRole::AcceptRole);
-
-    // connect - cancel
-    QPushButton *cancelButton = box->button(QDialogButtonBox::Cancel);
-    connect(cancelButton, &QPushButton::clicked,
-            this, &FilterDialog::reject);
-
-    l->addWidget(box, 1, 0, 2, 0);
-}
-
+// confirms the filter
 void FilterDialog::onFilterClicked()
 {
     // filter only if necessary
@@ -115,11 +37,14 @@ void FilterDialog::onFilterClicked()
     emit filterConfirmed(fm, filterVal->text());
 }
 
+
+// resets the filter
 void FilterDialog::onResetClicked()
 {
     filterVal->setText("");
     cb->setCurrentIndex(0);
 
+    // reset only if necessary
     if (prevMode == FilterMode::none) {
         return;
     }
@@ -127,5 +52,95 @@ void FilterDialog::onResetClicked()
     prevMode = FilterMode::none;
     prevString = "";
 
+    // signalizes filter reset
     emit filterConfirmed(FilterMode::none, "");
+}
+
+
+// sets up the layout
+void FilterDialog::setupLayout()
+{
+    l = new QGridLayout();
+
+    // vertical size should as low as possible
+    setFixedSize(width(), 0);
+
+    setupFilter();
+    setupButtons();
+
+    setLayout(l);
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    adjustSize();
+}
+
+
+// sets up the filter contents
+void FilterDialog::setupFilter()
+{
+    cb = new QComboBox();
+
+    const QString none = "None";
+    const QString byKanji = "By kanji";
+    const QString byReading = "By reading";
+    const QString byMeaning = "By meaning";
+
+    modeMap.insert(none, FilterMode::none);
+    modeMap.insert(byKanji, FilterMode::byKanji);
+    modeMap.insert(byReading, FilterMode::byReading);
+    modeMap.insert(byMeaning, FilterMode::byMeaning);
+
+    // we want to preserve order (not ordered alphabetically as in the map)
+    cb->addItems(QStringList{none, byKanji, byReading, byMeaning});
+
+    // filter value is not enabled for "none"
+    filterVal = new QLineEdit();
+    filterVal->setEnabled(false);
+
+    connect(cb, &QComboBox::currentTextChanged,
+            this, [&](const QString &text){
+        emit enableFilterVal(text != "None");
+    });
+    connect(this, &FilterDialog::enableFilterVal,
+            filterVal, &QLineEdit::setEnabled);
+
+    l->addWidget(cb, 0, 0);
+    l->addWidget(filterVal, 0, 1);
+}
+
+
+// sets up the dialog buttons
+void FilterDialog::setupButtons()
+{
+    buttonBox = new QDialogButtonBox(QDialogButtonBox::Reset |
+                               QDialogButtonBox::Cancel);
+    buttonBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    // connect - reset
+    QPushButton *resetButton = buttonBox->button(QDialogButtonBox::Reset);
+    connect(resetButton, &QPushButton::clicked,
+            this, &FilterDialog::onResetClicked);
+
+    // connect - apply
+    QPushButton *filterButton = new QPushButton("Apply");
+    connect(filterButton, &QPushButton::clicked,
+            this, &FilterDialog::onFilterClicked);
+
+    buttonBox->addButton(filterButton, QDialogButtonBox::ButtonRole::ApplyRole);
+
+    // connect - confirm
+    QPushButton *confirmButton = new QPushButton("Confirm");
+    connect(confirmButton, &QPushButton::clicked,
+            this, &FilterDialog::accept);
+    connect(confirmButton, &QPushButton::clicked,
+            this, &FilterDialog::onFilterClicked);
+
+    buttonBox->addButton(confirmButton, QDialogButtonBox::ButtonRole::AcceptRole);
+
+    // connect - cancel
+    QPushButton *cancelButton = buttonBox->button(QDialogButtonBox::Cancel);
+    connect(cancelButton, &QPushButton::clicked,
+            this, &FilterDialog::reject);
+
+    l->addWidget(buttonBox, 1, 0, 2, 0);
 }
