@@ -8,183 +8,235 @@
 #include <cstdio>
 #include <iostream>
 
-void kanji_data::kanji_compound::repeat(bool succeeded) {
-	last_rep_ = std::chrono::system_clock::now();
+namespace kanji_data {
 
-	if (succeeded) {
-		if (level_ == max_level) {
-			return;
-		}
-		level_ = level_ * 2;
-	}
-	else {
-		if (level_ == 1) {
-			return;
-		}
-		level_ = level_ / 2;
-	}
-}
+    // changes kanji level and time
+    void kanji_compound::repeat(bool succeeded) {
+        // sets time to "now"
+        last_rep_ = std::chrono::system_clock::now();
 
-void kanji_data::kanji_compound::reset_time() {
-	last_rep_ = std::chrono::system_clock::now();
-}
+        // halfes or doubles the level (not exceeding the limits)
+        if (succeeded) {
+            if (level_ == max_level) {
+                return;
+            }
+            level_ = level_ * 2;
+        }
+        else {
+            if (level_ == 1) {
+                return;
+            }
+            level_ = level_ / 2;
+        }
+    }
 
-void kanji_data::kanji_lib::reset_time() {
-	std::for_each(kanji_.begin(), kanji_.end(), [](kanji_compound kc) {kc.reset_time(); });
-}
 
-kanji_data::kanji_compound kanji_data::kanji_lib::add_kanji(std::wstring kanji_str, std::wstring reading, std::wstring meaning) {
-    if (std::find_if(kanji_.begin(), kanji_.end(), [&](const kanji_compound &kc) { return kanji_str == kc.get_kanji(); }) != kanji_.end()) {
-		throw std::logic_error("Duplicate kanji");
-	}
+    // resets time to "now" without repeating (changing level)
+    void kanji_compound::reset_time() {
+        last_rep_ = std::chrono::system_clock::now();
+    }
 
-    kanji_compound kc{ std::move(kanji_str), std::move(reading),
-                std::move(meaning), ++max_id_, 1, std::chrono::system_clock::now() };
-    kanji_.push_back(kc);
 
-    return kc;
-}
+    // resets time of all kanji compounds in the library
+    void kanji_lib::reset_time() {
+        std::for_each(kanji_.begin(), kanji_.end(), [](kanji_compound kc) {
+            kc.reset_time();
+        });
+    }
 
-void kanji_data::kanji_lib::update_kanji(kanji_compound kanji) {
-    auto it = std::find_if(kanji_.begin(), kanji_.end(),
-                           [&](const kanji_compound &kc) {
-        return kanji.get_id() == kc.get_id();
-    });
 
-	if (!kanji.id_valid() || it == kanji_.end()) {
-		throw std::logic_error("Cannot update kanji - missing value");
-	}
+    // adds a kanji to the library, with checking for duplicates
+    kanji_compound kanji_lib::add_kanji(std::wstring kanji_str, std::wstring reading,
+                                        std::wstring meaning) {
 
-    *it = std::move(kanji);
-}
+        // if duplicate is found, add fails
+        auto find_it = std::find_if(kanji_.begin(), kanji_.end(),
+                                    [&](const kanji_compound &kc) {
+            return kanji_str == kc.get_kanji();
+        });
 
-void kanji_data::kanji_lib::delete_kanji(kanji_compound::kanji_id id) {
-    kanji_.erase(std::remove_if(kanji_.begin(), kanji_.end(),
-                                [&](const kanji_compound &kc) {
-        return kc.get_id() == id;
-    }), kanji_.end());
-}
+        if (find_it != kanji_.end()) {
+            throw std::logic_error("Duplicate kanji");
+        }
 
-std::vector<kanji_data::kanji_compound> kanji_data::by_kanji(const kanji_lib &lib, const std::wstring &k) {
-	std::vector<kanji_compound> kanji_k;
+        // sets level to 1, sets a unique id, compound is handled as being last repeated
+        // on addition
+        kanji_compound kc{ std::move(kanji_str), std::move(reading), std::move(meaning),
+                           ++max_id_, 1, std::chrono::system_clock::now() };
+        kanji_.push_back(kc);
 
-    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                 std::back_inserter(kanji_k),
-                 [&](const kanji_compound &kc) {
-        return kc.get_kanji().find(k) != std::wstring::npos;
-    });
+        return kc;
+    }
 
-	return kanji_k;
-}
 
-std::vector<kanji_data::kanji_compound> kanji_data::by_meaning(const kanji_lib &lib, const std::wstring &m) {
-	std::vector<kanji_compound> kanji_k;
-    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                 std::back_inserter(kanji_k),
-                 [&](const kanji_compound &kc) {
-        return kc.meaning.find(m) != std::wstring::npos;
-    });
+    // updates the compound, checks for id validity
+    void kanji_lib::update_kanji(kanji_compound kanji) {
+        // kanji must be found by id
+        auto it = std::find_if(kanji_.begin(), kanji_.end(),
+                               [&](const kanji_compound &kc) {
+            return kanji.get_id() == kc.get_id();
+        });
 
-	return kanji_k;
-}
+        if (!kanji.id_valid() || it == kanji_.end()) {
+            throw std::logic_error("Cannot update kanji - missing value");
+        }
 
-std::vector<kanji_data::kanji_compound> kanji_data::by_reading(const kanji_lib &lib, const std::wstring &r) {
-	std::vector<kanji_compound> kanji_k;
-    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                 std::back_inserter(kanji_k),
-                 [&](const kanji_compound &kc) {
-        return kc.reading.find(r) != std::wstring::npos;
-    });
+        // kanji data is entirely replaced, id remains the same
+        *it = std::move(kanji);
+    }
 
-	return kanji_k;
-}
+    // delete kanji compound with the given id. Does not delete or throw if
+    // the id is not present
+    void kanji_lib::delete_kanji(kanji_compound::kanji_id id) {
+        kanji_.erase(std::remove_if(kanji_.begin(), kanji_.end(),
+                                    [&](const kanji_compound &kc) {
+            return kc.get_id() == id;
+        }), kanji_.end());
+    }
 
-std::vector<kanji_data::kanji_compound> kanji_data::due_today(const kanji_lib &lib) {
-	std::vector<kanji_compound> kanji_k;
-    std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                 std::back_inserter(kanji_k), [&](const kanji_compound &kc) {
-		time t = kc.get_last_rep() + std::chrono::hours(kc.get_level() * 24);
-		return t <= std::chrono::system_clock::now();
-	});
+    // filters by kanji characters
+    std::vector<kanji_compound> by_kanji(const kanji_lib &lib, const std::wstring &k) {
 
-	return kanji_k;
-}
+        std::vector<kanji_compound> kanji_k;
 
-kanji_data::kanji_lib kanji_data::read_lib(std::wistream & is) {
-	std::vector<kanji_compound> kanji;
-	kanji_compound::kanji_id id = 0;
+        // all compounds that contain the kanji string
+        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
+                     std::back_inserter(kanji_k),
+                     [&](const kanji_compound &kc) {
+            return kc.get_kanji().find(k) != std::wstring::npos;
+        });
 
-	while (true) {
-		if (!is.good()) {
-			break;
-		}
+        return kanji_k;
+    }
 
-		std::wstring line;
-		getline(is, line);
+    // filters by meaning
+    std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::wstring &m) {
 
-		if (!line.empty())
-		{
-			std::wstringstream ss{ line };
+        std::vector<kanji_compound> kanji_k;
+        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
+                     std::back_inserter(kanji_k),
+                     [&](const kanji_compound &kc) {
+            return kc.meaning.find(m) != std::wstring::npos;
+        });
 
-			std::wstring k;
-			std::wstring r;
-			std::wstring m;
+        return kanji_k;
+    }
 
-			time_t t;
+    // filters by reading
+    std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r) {
 
-			getline(ss, k, L';');
-			getline(ss, r, L';');
-			getline(ss, m, L';');
+        std::vector<kanji_compound> kanji_k;
+        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
+                     std::back_inserter(kanji_k),
+                     [&](const kanji_compound &kc) {
+            return kc.reading.find(r) != std::wstring::npos;
+        });
 
-			std::wstring ts;
-			getline(ss, ts, L';');
-			std::wstringstream tss{ ts };
-			tss >> t;
+        return kanji_k;
+    }
 
-			std::wstring ls;
-			getline(ss, ls, L';');
+    // compounds which can be repeated "now"
+    std::vector<kanji_compound> due_today(const kanji_lib &lib) {
 
-            bool failed =
-                    !std::all_of(ls.begin(), ls.end(), iswdigit) ||
-                    !std::all_of(ts.begin(), ts.end(), iswdigit) ||
-                    k == L"" ||
-                    r == L"" ||
-                    m == L"";
+        std::vector<kanji_compound> kanji_k;
+        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
+                     std::back_inserter(kanji_k), [&](const kanji_compound &kc) {
 
-            if (failed) {
-                throw std::logic_error("Could not parse input file.");
+            // last repetition must have been at least kc.get_level() days ago
+            time t = kc.get_last_rep() + std::chrono::hours(kc.get_level() * 24);
+            return t <= std::chrono::system_clock::now();
+        });
+
+        return kanji_k;
+    }
+
+    // reads library from the input stream
+    kanji_lib read_lib(std::wistream & is) {
+        std::vector<kanji_compound> kanji; // result kanji
+        kanji_compound::kanji_id id = 0; // id to be assigned to new kanji
+
+        while (true) {
+            if (!is.good()) {
+                break;
             }
 
-            kanji_compound kc{ k, r, m, ++id, std::stoi(ls),
-                        std::chrono::system_clock::from_time_t(t) };
-			kanji.push_back(std::move(kc));
-		}
-	}
+            std::wstring line;
+            getline(is, line);
 
-	return kanji_lib{ std::move(kanji), id };
-}
+            // a line represents one compound
+            if (!line.empty())
+            {
+                std::wstringstream ss{ line };
 
-kanji_data::kanji_lib kanji_data::empty_lib()
-{
-    return kanji_lib{ std::vector<kanji_compound>(), 0};
-}
+                std::wstring k; // kanji
+                std::wstring r; // reading
+                std::wstring m; // meaning
 
-void write_kanji(const kanji_data::kanji_compound &kc, std::wostream &wos);
+                time_t t; // last repetition time
 
-void kanji_data::write_lib(const kanji_lib &lib, std::wostream &wos)
-{
-	std::for_each(lib.get_kanji().begin(), lib.get_kanji().end(), [&wos](const kanji_compound &kc)
-	{
-		write_kanji(kc, wos);
-		wos << std::endl;
-	});
-}
+                getline(ss, k, L';');
+                getline(ss, r, L';');
+                getline(ss, m, L';');
 
-void write_kanji(const kanji_data::kanji_compound &kc, std::wostream &wos)
-{
-	wos << kc.get_kanji() << L";";
-	wos << kc.reading << L";";
-	wos << kc.meaning << L";";
-	wos << std::chrono::system_clock::to_time_t(kc.get_last_rep()) << L";";
-	wos << kc.get_level();
+                std::wstring ts;
+                getline(ss, ts, L';');
+                std::wstringstream tss{ ts };
+                tss >> t;
+
+                std::wstring ls; // level
+                getline(ss, ls, L';');
+
+                // check if everything has been parsed correctly
+                bool failed =
+                        !std::all_of(ls.begin(), ls.end(), iswdigit) ||
+                        !std::all_of(ts.begin(), ts.end(), iswdigit) ||
+                        k == L"" ||
+                        r == L"" ||
+                        m == L"";
+
+                if (failed) {
+                    throw std::logic_error("Could not parse input file.");
+                }
+
+                // add a new compound with a unique id
+                kanji_compound kc{ k, r, m, ++id, std::stoi(ls),
+                            std::chrono::system_clock::from_time_t(t) };
+                kanji.push_back(std::move(kc));
+            }
+        }
+
+        // return compounds along with id (maximum of all ids)
+        return kanji_lib{ std::move(kanji), id };
+    }
+
+    // creates a lib with no compounds
+    kanji_lib empty_lib()
+    {
+        return kanji_lib{ std::vector<kanji_compound>(), 0};
+    }
+
+    void write_kanji(const kanji_compound &kc, std::wostream &wos);
+
+    // writes library to an output stream
+    void write_lib(const kanji_lib &lib, std::wostream &wos)
+    {
+        std::for_each(lib.get_kanji().begin(), lib.get_kanji().end(),
+                      [&wos](const kanji_compound &kc) {
+            // one line per a compound
+            write_kanji(kc, wos);
+            wos << std::endl;
+        });
+    }
+
+    // writes a single compound to the output stream
+    void write_kanji(const kanji_compound &kc, std::wostream &wos)
+    {
+        // properties are separated by L';'
+        wos << kc.get_kanji() << L';';
+        wos << kc.reading << L';';
+        wos << kc.meaning << L';';
+        wos << std::chrono::system_clock::to_time_t(kc.get_last_rep()) << L';';
+        wos << kc.get_level();
+    }
+
 }

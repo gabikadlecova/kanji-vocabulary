@@ -1,10 +1,10 @@
 #include "iolib.h"
 
+#include <QFileDialog>
+
 #include <fstream>
 #include <codecvt>
 #include <iostream>
-
-#include <QFileDialog>
 
 // Construct LibManip. If the parameter isn't an empty string,
 // LibManip::readLib() or LibManip::onSaveData() can be called immediately to load
@@ -15,6 +15,7 @@ LibManip::LibManip(std::string fileName, QWidget *parent) :
 {
     this->parent = parent;
 }
+
 
 // Saves data to path LibManip::fileName or opens a QFileDialog for
 // path selection. If the dialog is dismissed, LibManip::noSaveFileName()
@@ -34,7 +35,6 @@ void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
     }
 
     // save to file
-
     std::wofstream wos{ fileName };
     wos.imbue(std::locale(std::locale::empty(),
                           new std::codecvt_utf8<wchar_t, 0x10ffff, std::consume_header>));
@@ -43,6 +43,7 @@ void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
 
     wos.close();
 }
+
 
 // Loads data from the path selected through a QFileDialog. Calls LibManip::readLib()
 void LibManip::onLoadData()
@@ -59,6 +60,7 @@ void LibManip::onLoadData()
     readLib();
 
 }
+
 
 // Loads data from the path LibManip::fileName.
 // The data is expected to be in utf8. Emits LibManip::dataLoaded() on

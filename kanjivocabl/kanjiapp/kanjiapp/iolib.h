@@ -20,9 +20,6 @@ public:
      * \brief LibManip can be constructed with a default file path or without.
      * \param defaultName Default load and save path
      * \param parent QObject parent
-     * If the parameter isn't an empty string, readLib() or
-     * onSaveData() can be called immediately to load or save
-     * data respectively.
      */
     LibManip(std::string defaultName = "", QWidget *parent = nullptr);
     ~LibManip() = default;
@@ -73,7 +70,5 @@ private:
 
     std::string fileName; /*!< Default load and save path. */
 };
-
-
 
 #endif // IOLIB_H

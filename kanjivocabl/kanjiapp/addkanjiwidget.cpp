@@ -20,13 +20,17 @@ AddKanjiWidget::~AddKanjiWidget()
 }
 
 
+// if all fields are valid, signalizes that a new kanji compound should be added
 void AddKanjiWidget::onAddClicked()
 {
-    auto k = kanji_l->text().toStdWString();
-    auto r = reading_l->text().toStdWString();
-    auto m = meaning_l->text().toStdWString();
+    auto k = kanjiField->text().toStdWString();
+    auto r = readingField->text().toStdWString();
+    auto m = meaningField->text().toStdWString();
 
+    // all values must be non-empty
     if (k == L"" || r == L"" || m == L"") {
+
+        // show message box and exit
         QMessageBox emptyBox;
         emptyBox.setText("Cannot add kanji");
         emptyBox.setInformativeText("Some of the fields are empty.");
@@ -35,48 +39,60 @@ void AddKanjiWidget::onAddClicked()
         return;
     }
 
+    // create a new compound without id or training data (will be set up in the lib)
     emit kanjiAddRequested(kcomp(k, r, m));
 }
 
+
+// on success, wipe all fields
 void AddKanjiWidget::onAddSucceeded(kcomp kc)
 {
-    kanji_l->setText("");
-    reading_l->setText("");
-    meaning_l->setText("");
+    kanjiField->setText("");
+    readingField->setText("");
+    meaningField->setText("");
 }
 
+
+// set add form layout
 void AddKanjiWidget::setupLayout()
 {
     l = new QVBoxLayout();
 
+    // kanji characters field
     QLabel *kanjiLabel = new QLabel("Kanji");
-    kanji_l = new QLineEdit();
+    kanjiField = new QLineEdit();
 
-    auto font = kanji_l->font();
+    auto font = kanjiField->font();
     font.setPixelSize(32);
-    kanji_l->setFont(font);
+    kanjiField->setFont(font);
 
+    // reading field
     QLabel *readingLabel = new QLabel("Reading");
-    reading_l = new QLineEdit();
+    readingField = new QLineEdit();
 
+    // meaning field
     QLabel *meaningLabel = new QLabel("Meaning");
-    meaning_l = new QLineEdit();
+    meaningField = new QLineEdit();
 
+    /* add widgets */
     l->addWidget(kanjiLabel);
-    l->addWidget(kanji_l);
+    l->addWidget(kanjiField);
 
     l->addWidget(readingLabel);
-    l->addWidget(reading_l);
+    l->addWidget(readingField);
 
     l->addWidget(meaningLabel);
-    l->addWidget(meaning_l);
+    l->addWidget(meaningField);
 
+    // submit button
     setupButtons();
 
     l->addStretch();
     setLayout(l);
 }
 
+
+// adds the submit button
 void AddKanjiWidget::setupButtons()
 {
     QPushButton *addButton = new QPushButton("Add kanji");
