@@ -19,18 +19,29 @@ TrainWidget::~TrainWidget()
     delete ui;
 }
 
+
+// sets a new training set
 void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
 {
     trainKanji = std::move(newTraining);
 
-    // to enable "go back"
+    /* "go back"  setup*/
+
+    // trainKanji is not modified, resKanji is a copy for changes
     resKanji = trainKanji;
+
+    //stack of trained ids
     history.clear();
+
+    // initially, all kanji ids are valid (not trained with "yes" or "no")
     std::transform(trainKanji.begin(), trainKanji.end(),
                    std::inserter(validId, validId.begin()),
-                   [](const kcomp &kc){ return kc.get_id(); });
+                   [](const kcomp &kc){
+        return kc.get_id();
+    });
 
 
+    // training set must be nonempty
     if (trainKanji.size() == 0) {
         QMessageBox noTrainBox;
         noTrainBox.setText("No training kanji available.");
@@ -41,33 +52,41 @@ void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
         return;
     }
 
+    // start the training
     updateRemainingLabel();
     newCycle();
 }
 
+
+// flips the flashcard
 void TrainWidget::onFlipClicked()
 {
     flipped = true;
 
+    // hide flip button, show training buttons
     flipButton->hide();
 
     updateKanjiLabels();
     feedbackSplitter->show();
 }
 
+
+// collects feedback from the user and modifies the compound
 void TrainWidget::onResponseSelected(FlipResponse fr)
 {
     // skip if unsure
     if (fr != FlipResponse::maybe) {
 
-        // train succeeded
+        // kanji compound is being repeated
         auto trainedIt = std::find_if(resKanji.begin(), resKanji.end(),
                                  [=](const kcomp &kc){
             return kc.get_id() == currKanji->get_id();
         });
 
+        // "yes" or "no"
         trainedIt->repeat(fr == FlipResponse::yes);
 
+        // the compound is repeated only once in a training
         validId.erase(currKanji->get_id());
 
         // remaining count changed
@@ -86,11 +105,13 @@ void TrainWidget::onResponseSelected(FlipResponse fr)
         return;
     }
 
-    // update page
+    // update page to show the next compound
     updateKanjiLabels();
     flipBack();
 }
 
+
+// ends the training and offers to save training progress
 void TrainWidget::onTrainingEndClicked()
 {
     QMessageBox endBox;
@@ -112,13 +133,17 @@ void TrainWidget::onTrainingEndClicked()
     }
 }
 
+
+// goes back in history or flips the flashcard back
 void TrainWidget::onBackButtonClicked()
 {
+    // flip back, do not change current kanji
     if (flipped) {
         flipBack();
         return;
     }
 
+    // the first kanji
     if (history.size() == 0) {
         return;
     }
@@ -143,22 +168,26 @@ void TrainWidget::onBackButtonClicked()
         updateRemainingLabel();
     }
 
-    // revert training in result
+    // training is reverted in the result kanji vector
     *trainedIt = *currKanji;
 
     updateKanjiLabels();
 }
+
 
 void TrainWidget::showEvent(QShowEvent *e)
 {
     emit customMenuShown(menu);
 }
 
+
 void TrainWidget::hideEvent(QHideEvent *e)
 {
     emit customMenuHidden();
 }
 
+
+// sets up the layout
 void TrainWidget::setupLayout()
 {
     l = new QVBoxLayout();
@@ -171,12 +200,11 @@ void TrainWidget::setupLayout()
     setLayout(l);
 }
 
+
+// sets up the custom menu
 void TrainWidget::setupMenuButtons()
 {
-    // TODO hide menu splitter in MainWidget!
-
     menu = new QSplitter(Qt::Orientation::Horizontal);
-
 
     // back
     QPushButton *backButton = new QPushButton("Back");
@@ -196,18 +224,20 @@ void TrainWidget::setupMenuButtons()
     menu->addWidget(endButton);
 
     menu->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+}
 
-    // this is on both flip and train
+
+// sets up the train page (not flipped)
+void TrainWidget::setupTrainPage()
+{
+    // these labels are both on train and flip page in this layout
+
+    // kanji remaining
     QLabel *remainingLabel = new QLabel();
     connect(this, &TrainWidget::kanjiRemainingChanged,
             remainingLabel, &QLabel::setText);
 
-
-    l->addWidget(remainingLabel);
-}
-
-void TrainWidget::setupTrainPage()
-{
+    // kanji characters
     kanjiText = new QLabel();
     kanjiText->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     kanjiText->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
@@ -220,12 +250,15 @@ void TrainWidget::setupTrainPage()
             kanjiText, &QLabel::setText);
 
     // add widgets
+    l->addWidget(remainingLabel);
     l->addWidget(kanjiText);
 }
 
+
+// sets up the flipped page
 void TrainWidget::setupFlippedPage()
 {
-    // kanji reading and meaning
+    // kanji reading
     kanjiReading = new QLabel();
     kanjiReading->setAlignment(Qt::AlignHCenter);
     connect(this, &TrainWidget::kanjiReadingChanged,
@@ -235,6 +268,7 @@ void TrainWidget::setupFlippedPage()
     rFont.setPixelSize(14);
     kanjiReading->setFont(rFont);
 
+    // kanji meaning
     kanjiMeaning = new QLabel();
     kanjiMeaning->setAlignment(Qt::AlignHCenter);
     connect(this, &TrainWidget::kanjiMeaningChanged,
@@ -248,6 +282,8 @@ void TrainWidget::setupFlippedPage()
     l->addWidget(kanjiMeaning);
 }
 
+
+// sets up buttons for both pages
 void TrainWidget::setupButtons()
 {
     // flip
@@ -286,6 +322,8 @@ void TrainWidget::setupButtons()
     feedbackSplitter->hide();
 }
 
+
+// updates label which shows the number of remaining kanji
 void TrainWidget::updateRemainingLabel()
 {
     auto totalCount = trainKanji.size();
@@ -296,10 +334,13 @@ void TrainWidget::updateRemainingLabel()
     emit kanjiRemainingChanged(remaining);
 }
 
+
+// updates displayed kanji data
 void TrainWidget::updateKanjiLabels()
 {
     emit kanjiChanged(QString::fromStdWString(currKanji->get_kanji()));
 
+    // do not show all labels if the flascard is not flipped
     if (flipped) {
         emit kanjiMeaningChanged(QString::fromStdWString(currKanji->meaning));
         emit kanjiReadingChanged(QString::fromStdWString(currKanji->reading));
@@ -309,14 +350,18 @@ void TrainWidget::updateKanjiLabels()
         emit kanjiReadingChanged("");
     }
 }
+
+
+// starts a new training cycle
 void TrainWidget::newCycle()
 {
+    // find first kanji which was not repeated in a previous cycle
     currKanji = std::find_if(trainKanji.begin(), trainKanji.end(),
                              [&](const kcomp &kc) {
         return validId.find(kc.get_id()) != validId.end();
     });
 
-    // all trained, return modified kanji
+    // everything has been trained, return modified kanji
     if (currKanji == trainKanji.end()) {
         emit trainingEnded(resKanji);
         return;
@@ -328,6 +373,8 @@ void TrainWidget::newCycle()
     }
 }
 
+
+// flip the flashcard back
 void TrainWidget::flipBack()
 {
     flipped = false;

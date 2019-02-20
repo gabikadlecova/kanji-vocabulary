@@ -1,5 +1,5 @@
-#ifndef KANJI_DATA_HPP
-#define KANJI_DATA_HPP
+#ifndef KANJI_DATA_H
+#define KANJI_DATA_H
 
 #include <vector>
 #include <istream>
@@ -240,4 +240,4 @@ namespace kanji_data
 	void write_lib(const kanji_lib &lib, std::wostream &wos);
 }
 
-#endif // !KANJI_DATA_HPP
+#endif // !KANJI_DATA_H
