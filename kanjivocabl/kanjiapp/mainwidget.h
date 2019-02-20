@@ -132,37 +132,71 @@ private slots:
     void onKanjiAdded(kcomp kc);
 
     /*!
-     * \brief onKanjiFiltered Is called if the kanji data should be filtered.
-     * \param fm
-     * \param filterVal
+     * \brief onKanjiFiltered Is called when the kanji data should be filtered.
+     * \param fm Filter mode
+     * \param filterVal Value of the filter
      */
     void onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal);
+
+    /*!
+     * \brief onTrainingRequested Is called if training data should be provided.
+     */
     void onTrainingRequested();
+    /*!
+     * \brief onTrainingSubmitted Is called when modified training data is submitted.
+     * \param trainedKanji Repeated kanji compounds.
+     */
     void onTrainingSubmitted(const std::vector<kcomp> &trainedKanji);
+    /*!
+     * \brief onTrainingFinished Is called when the training was finished.
+     * In this slot, modifications of the training data are not handled.
+     */
     void onTrainingFinished();
 
+    /*!
+     * \brief onLibLoaded Is called when a library has been loaded.
+     * \param lib Loaded library.
+     */
     void onLibLoaded(kanji_data::kanji_lib lib);
+    /*!
+     * \brief onBadFormat Is called if the input file had an invalid format.
+     */
     void onBadFormat();
+    /*!
+     * \brief onLoadFailed Is called when the user cancelled the loading.
+     */
     void onLoadFailed();
+    /*!
+     * \brief onSaveFailed Is user when the user cancelled the saving.
+     */
     void onSaveFailed();
 
 private:
+    /*!
+     * \brief setupLayout Sets up a layout common for all pages.
+     */
     void setupLayout();
+    /*!
+     * \brief setupMenu Sets up a menu.
+     */
     void setupMenu();
+    /*!
+     * \brief setupPage Sets up the contents.
+     */
     void setupPage();
 
-    LibManip *lm;
-    kanji_data::kanji_lib lib;
+    LibManip *lm; /*!< Tool for loading and saving library data. */
+    kanji_data::kanji_lib lib; /*!< Provides a list of kanji compounds and CRUD. */
 
-    FilterDialog *d;
+    FilterDialog *d; /*!< Provides filtering of the library. */
 
     QVBoxLayout *l;
-    QLabel *title;
-    QSplitter *menuSplitter;
-    QSplitter *altMenuSplitter;
+    QLabel *title; /*!< The app title. */
+    QSplitter *menuSplitter; /*!< Default menu, is shown when there is no custom menu. */
+    QSplitter *altMenuSplitter; /*!< Current custom menu. */
 
-    QStackedWidget *pageStack;
-    QStack<int> idStack;
+    QStackedWidget *pageStack; /*!< Stack of all pages of the application. */
+    QStack<int> idStack; /*!< Stack used by "go back". */
 
     Ui::MainWidget *ui;
 };

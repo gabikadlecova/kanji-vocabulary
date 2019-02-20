@@ -77,8 +77,7 @@ void LibManip::readLib()
 
         emit dataLoaded(std::move(lib));
     }
-    catch (const std::logic_error &e) {
-        // format error
+    catch (const kanji_data::format_error &e) {
         wis.close();
 
         emit loadFailed();

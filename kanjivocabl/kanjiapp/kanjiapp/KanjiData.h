@@ -186,6 +186,50 @@ namespace kanji_data
 	};
 
     /*!
+     * \brief The duplicate_error class Exception object, is thrown if duplicates occur.
+     * This exception is thrown if the user tries to add a kanji compound whose
+     * kanji character string is already present in the library.
+     */
+    class duplicate_error : public std::logic_error {
+
+    public:
+        duplicate_error(const std::string &what_arg) :
+            std::logic_error(what_arg) {}
+        duplicate_error(const char *what_arg) :
+            std::logic_error(what_arg) {}
+        virtual ~duplicate_error() = default;
+    };
+    /*!
+     * \brief The format_error class Exception object, is thrown if the input is bad.
+     * This exception is thrown if the provided input file has an invalid format.
+     */
+    class format_error: public std::logic_error {
+
+    public:
+        format_error(const std::string &what_arg) :
+            std::logic_error(what_arg) {}
+        format_error(const char *what_arg) :
+            std::logic_error(what_arg) {}
+
+        virtual ~format_error() = default;
+    };
+
+    /*!
+     * \brief The format_error class Exception object, is thrown if a kanji is missing.
+     * This exception is thrown if a kanji compound referenced by an identifier
+     * is missing in the library, but is handled as if it were there (e.g. update).
+     */
+    class missing_error : public std::logic_error {
+
+    public:
+        missing_error(const std::string &what_arg) :
+            std::logic_error(what_arg) {}
+        missing_error(const char *what_arg) :
+            std::logic_error(what_arg) {}
+        virtual ~missing_error() = default;
+    };
+
+    /*!
      * \brief by_kanji Filters the library according to kanji characters.
      * \param lib Library to be searched.
      * \param k Kanji character filter.

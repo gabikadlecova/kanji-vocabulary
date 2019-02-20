@@ -4,13 +4,13 @@
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 #include "trainwidget.h"
-
 #include "detailswidget.h"
 #include "editwidget.h"
 #include "addkanjiwidget.h"
 
 #include <QPushButton>
 #include <QMessageBox>
+
 
 MainWidget::MainWidget(std::string fileName, QWidget *parent) :
     QWidget(parent),
@@ -22,22 +22,28 @@ MainWidget::MainWidget(std::string fileName, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // filter setup
     connect(d, &FilterDialog::filterConfirmed,
             this, &MainWidget::onKanjiFiltered);
 
-    // save, load
-
+    // save, load setup
     connect(this, &MainWidget::dataSaved,
             lm, &LibManip::onSaveData);
+
     connect(lm, &LibManip::noSaveFileSelected,
             this, &MainWidget::onSaveFailed);
+
+    // save, load errors
     connect(lm, &LibManip::noLoadFileSelected,
             this, &MainWidget::onLoadFailed);
+
     connect(lm, &LibManip::dataLoaded,
             this, &MainWidget::onLibLoaded);
+
     connect(lm, &LibManip::loadFailed,
             this, &MainWidget::onBadFormat);
 
+    // load the default library file
     if (fileName != "") {
         lm->readLib();
     }
@@ -49,29 +55,40 @@ MainWidget::~MainWidget() {
     delete ui;
 }
 
+
+// is called when the current page changes
 void MainWidget::onPageChanged(int pageId) {
     pageStack->setCurrentIndex(pageId);
 
+    // enables "go back"
     idStack.push(pageId);
 
     emit pageOpened();
     emit pageNumberOpened(pageId);
 }
 
+
+// is called when the home page should be opened
 void MainWidget::onHomeButtonClicked() {
     pageStack->setCurrentIndex(0);
+
+    // clear history for "go back"
     idStack.clear();
     idStack.push(0);
 
     emit homeOpened();
 }
 
+
+// is called on "go back"
 void MainWidget::onBackButtonClicked() {
+    // home page is always the first in the stack
     const int currId = pageStack->currentIndex();
     if (currId == 0) {
         return;
     }
 
+    // display the page opened before
     idStack.pop();
     int nextId = idStack.top();
 
@@ -80,21 +97,33 @@ void MainWidget::onBackButtonClicked() {
         return;
     }
     pageStack->setCurrentIndex(nextId);
-
 }
 
+
+// shows a custom menu instead of the default menu
 void MainWidget::onCustomMenu(QSplitter *newMenu)
 {
-    l->removeWidget(menuSplitter);
+    // removes the currently shown menu
+    if (altMenuSplitter != nullptr) {
+        l->removeWidget(altMenuSplitter);
+        altMenuSplitter->hide();
+    }
+    else {
+        l->removeWidget(menuSplitter);
+        menuSplitter->hide();
+    }
+
+    // shows the custom menu
     if (newMenu != nullptr) {
         l->insertWidget(0, newMenu);
         newMenu->show();
     }
 
-    menuSplitter->hide();
     altMenuSplitter = newMenu;
 }
 
+
+// removes a custom menu and shows the default menu
 void MainWidget::onDefaultMenu()
 {
     if (altMenuSplitter != nullptr) {
@@ -107,26 +136,35 @@ void MainWidget::onDefaultMenu()
     menuSplitter->show();
 }
 
+
+// deletes a kanji compound from the library
 void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
     // erase from lib
     lib.delete_kanji(id);
     emit dataSaved(lib);
 
+    // assumes that delete is called from a detail page - should be changed otherwise
     onBackButtonClicked();
 }
 
+
+// updates a kanji compound in the library
 void MainWidget::onKanjiChanged(kcomp kc)
 {
     // update in the lib
     lib.update_kanji(std::move(kc));
     emit dataSaved(lib);
 
+    // assumes that update is called from a detail page - should be changed otherwise
     onBackButtonClicked();
 }
 
+
+// adds a kanji compound to the library
 void MainWidget::onKanjiAdded(kcomp kc)
 {
+    // generally user should not add a kanji which is already present in the library
     try {
         auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
                                     std::move(kc.reading),
@@ -136,7 +174,7 @@ void MainWidget::onKanjiAdded(kcomp kc)
         emit kanjiAdded(new_kc);
         onBackButtonClicked();
     }
-    catch (const std::logic_error &e) {
+    catch (const kanji_data::duplicate_error &e) {
         QMessageBox addFailBox;
         addFailBox.setText("Add failed");
         addFailBox.setInformativeText("This word has already been added to the library.");
@@ -145,16 +183,21 @@ void MainWidget::onKanjiAdded(kcomp kc)
     }
 }
 
+
+// applies a filter to the library data
 void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 {  
-    std::vector<kcomp> filterRes;
     using Mode = FilterDialog::FilterMode;
 
+    std::vector<kcomp> filterRes;
+
+    // empty string means no data
     if (fm != Mode::none && filterVal == "") {
         emit kanjiFiltered(QVector<kcomp>());
         return;
     }
 
+    // filter the library
     switch (fm) {
         case Mode::byKanji:
             filterRes = kanji_data::by_kanji(lib, filterVal.toStdWString());
@@ -172,14 +215,16 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
             emit filterReset();
             return;
 
+        // if there were a new enum value added, error
         default:
-            // TODO some nasty error
-            break;
+            throw std::logic_error("Invalid filter mode.");
     }
 
     emit kanjiFiltered(QVector<kcomp>::fromStdVector(std::move(filterRes)));
 }
 
+
+// fetches available training data
 void MainWidget::onTrainingRequested()
 {
     auto trainKanji = kanji_data::due_today(lib);
@@ -187,6 +232,8 @@ void MainWidget::onTrainingRequested()
     emit trainingDataChanged(std::move(trainKanji));
 }
 
+
+// updates kanji compounds with training results
 void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
 {
     std::for_each(trainedKanji.begin(), trainedKanji.end(), [=](const kcomp &kc){
@@ -198,17 +245,23 @@ void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
     onTrainingFinished();
 }
 
+
+// finishes a training, does not update data
 void MainWidget::onTrainingFinished()
 {
     onHomeButtonClicked();
 }
 
+
+// loads new library data
 void MainWidget::onLibLoaded(kanji_data::kanji_lib lib)
 {
     this->lib = std::move(lib);
     emit kanjiLoaded(QVector<kcomp>::fromStdVector(this->lib.get_kanji()));
 }
 
+
+// tried to load data, format was bad
 void MainWidget::onBadFormat()
 {
     QMessageBox loadFailBox;
@@ -219,6 +272,8 @@ void MainWidget::onBadFormat()
     loadFailBox.exec();
 }
 
+
+// user aborted the load dialog
 void MainWidget::onLoadFailed()
 {
     QMessageBox loadFailBox;
@@ -229,6 +284,8 @@ void MainWidget::onLoadFailed()
     loadFailBox.exec();
 }
 
+
+// user aborted the save dialog
 void MainWidget::onSaveFailed()
 {
     QMessageBox saveFailBox;
@@ -239,6 +296,8 @@ void MainWidget::onSaveFailed()
     saveFailBox.exec();
 }
 
+
+// sets up the layout
 void MainWidget::setupLayout() {
     setWindowTitle("Kanji vocabulary");
     l = new QVBoxLayout();
@@ -258,6 +317,7 @@ void MainWidget::setupLayout() {
 
     l->addWidget(title);
 
+    // main widget connects
     connect(this, &MainWidget::pageNumberOpened,
             this, [=](int no){
         if (no == 0) {
@@ -278,6 +338,8 @@ void MainWidget::setupLayout() {
     setLayout(l);
 }
 
+
+// sets up the default menu
 void MainWidget::setupMenu() {
     QSizePolicy menuPolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
 
@@ -311,109 +373,133 @@ void MainWidget::setupMenu() {
     l->addWidget(menuSplitter);
 }
 
+
+// sets up pages, connects pages together
 void MainWidget::setupPage() {
     pageStack = new QStackedWidget();
 
+    /* KanjiWidget - the menu page */
     auto kv = new KanjiWidget(pageStack);
     pageStack->addWidget(kv);
     idStack.push(0);
 
-    // tile page setup
-    connect(kv, &KanjiWidget::pageButtonClicked, this, &MainWidget::onPageChanged);
+    // tile menu setup
+    connect(kv, &KanjiWidget::pageButtonClicked,
+            this, &MainWidget::onPageChanged);
 
-    // TODO could be defined elsewhere (separate function...)
 
-    // kanji list setup
+    /* KanjiListWidget - list of kanji compounds*/
     auto kanjiList = new KanjiListWidget(QVector<kcomp>::fromStdVector(lib.get_kanji()));
+
+    // update with loaded data
     connect(this, &MainWidget::kanjiLoaded,
             kanjiList, &KanjiListWidget::onKanjiLoaded);
 
-    connect(kanjiList, &KanjiListWidget::detailPageRequested, this, &MainWidget::onPageChanged);
+    // open detail page of the selected compound
+    connect(kanjiList, &KanjiListWidget::detailPageRequested,
+            this, &MainWidget::onPageChanged);
+
     kv->addWidget("Kanji list", kanjiList);
 
-    // train MESSY, REWRITE (viz note)
+
+    /* TrainWidget - flashcards */
     TrainWidget *tw = new TrainWidget();
+
+    // save trainId - pageStack id
     int trainId = pageStack->count();
     kv->addWidget("Train", tw);
 
-    QPushButton *loadButton = new QPushButton("Load data");
-    connect(loadButton, &QPushButton::clicked,
-            lm, &LibManip::onLoadData);
-
-    kv->addButton(loadButton);
-
-
-    // data load end
-
-    connect(tw, &TrainWidget::trainingEnded,
-            this, &MainWidget::onHomeButtonClicked);
-
-    connect(tw, &TrainWidget::customMenuShown,
-            this, &MainWidget::onCustomMenu);
-    connect(tw, &TrainWidget::customMenuHidden,
-            this, &MainWidget::onDefaultMenu);
-
-
+    // start training
     connect(this, &MainWidget::pageNumberOpened,
             this, [=](int pageId){
         if (pageId == trainId) {
             this->onTrainingRequested();
         }
     });
-
     connect(this, &MainWidget::trainingDataChanged,
             tw, &TrainWidget::onTrainKanjiSet);
 
+    // end training, save changes
+    connect(tw, &TrainWidget::trainingEnded,
+            this, &MainWidget::onHomeButtonClicked);
     connect(tw, &TrainWidget::trainingEnded,
             this, &MainWidget::onTrainingSubmitted);
 
+    // end training, do not save changes
     connect(tw, &TrainWidget::trainingDiscarded,
             this, &MainWidget::onTrainingFinished);
 
-    // filter dialog
+    // custom menu
+    connect(tw, &TrainWidget::customMenuShown,
+            this, &MainWidget::onCustomMenu);
+    connect(tw, &TrainWidget::customMenuHidden,
+            this, &MainWidget::onDefaultMenu);
+
+
+    /* Load button - load a lib */
+    QPushButton *loadButton = new QPushButton("Load data");
+    connect(loadButton, &QPushButton::clicked,
+            lm, &LibManip::onLoadData);
+
+    kv->addButton(loadButton);
+
+    /* FilterDialog - open from kanjiList */
     connect(kanjiList, &KanjiListWidget::filterDialogRequested,
             d, &FilterDialog::show);
 
-    // connect list to kanji detail
-    int detailId = pageStack->count();
+    connect(this, &MainWidget::kanjiFiltered,
+            kanjiList, &KanjiListWidget::onKanjiFiltered);
+    connect(this, &MainWidget::filterReset,
+            kanjiList, &KanjiListWidget::onFilterReset);
+
+    /* DetailWidget - kanji compound detail page */
 
     auto dw = new DetailsWidget();
+
+    // save detailId - pageStack id
+    int detailId = pageStack->count();
     kanjiList->detailPageId = detailId;
     pageStack->addWidget(dw);
 
+    // selected kanji shown in detail
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
             dw, &DetailsWidget::onKanjiChanged);
 
-    // connect detail to edit
+    /* EditWidget - kanji compound edit page */
     auto ew = new EditWidget();
+
+    // edit is opened from detail
     dw->editPageId = pageStack->count();
     pageStack->addWidget(ew);
-
 
     connect(dw, &DetailsWidget::editPageRequested,
             this, &MainWidget::onPageChanged);
 
-    // connect - kanji deletion
+    // kanji deletion
     connect(dw, &DetailsWidget::kanjiDeletionRequested,
             this, &MainWidget::onKanjiDeleted);
     connect(dw, &DetailsWidget::kanjiDeletionRequested,
             kanjiList, &KanjiListWidget::onKanjiDeleted);
 
-    // edit page connects
+    // kanji update
     connect(ew, &EditWidget::kanjiUpdateSaved,
             dw, &DetailsWidget::onKanjiChanged);
     connect(ew, &EditWidget::kanjiUpdateSaved,
             this, &MainWidget::onKanjiChanged);
 
+    // selected kanji shown in edit
     connect(kanjiList, &KanjiListWidget::currentKanjiChanged,
             ew, &EditWidget::onKanjiChanged);
 
-    // add page
+
+    /* AddWidget - add a new kanji compound */
     auto aw = new AddKanjiWidget();
+
+    // save addId - pageStack id
     kanjiList->addPageId = pageStack->count();
     pageStack->addWidget(aw);
 
-    // connect add
+    // add to library and list
     connect(aw, &AddKanjiWidget::kanjiAddRequested,
             this, &MainWidget::onKanjiAdded);
     connect(this, &MainWidget::kanjiAdded,
@@ -421,22 +507,14 @@ void MainWidget::setupPage() {
     connect(this, &MainWidget::kanjiAdded,
             aw, &AddKanjiWidget::onAddSucceeded);
 
-    // connect to kanji list
+    // opened from the list
     connect(kanjiList, &KanjiListWidget::addPageRequested,
             this, &MainWidget::onPageChanged);
 
 
-    // MESSY
-    // connect - filter
-    connect(this, &MainWidget::kanjiFiltered,
-            kanjiList, &KanjiListWidget::onKanjiFiltered);
-    connect(this, &MainWidget::filterReset,
-            kanjiList, &KanjiListWidget::onFilterReset);
-
-
-    // pageStack setup
-    QSizePolicy sizeLower(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    pageStack->setSizePolicy(sizeLower);
+    // pageStack layout setup
+    QSizePolicy stackSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    pageStack->setSizePolicy(stackSizePolicy);
 
     l->addWidget(pageStack);
 }

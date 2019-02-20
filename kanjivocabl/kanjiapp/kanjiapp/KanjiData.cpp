@@ -56,7 +56,7 @@ namespace kanji_data {
         });
 
         if (find_it != kanji_.end()) {
-            throw std::logic_error("Duplicate kanji");
+            throw duplicate_error("Duplicate kanji");
         }
 
         // sets level to 1, sets a unique id, compound is handled as being last repeated
@@ -78,7 +78,7 @@ namespace kanji_data {
         });
 
         if (!kanji.id_valid() || it == kanji_.end()) {
-            throw std::logic_error("Cannot update kanji - missing value");
+            throw missing_error("Cannot update kanji - missing value");
         }
 
         // kanji data is entirely replaced, id remains the same
@@ -195,7 +195,7 @@ namespace kanji_data {
                         m == L"";
 
                 if (failed) {
-                    throw std::logic_error("Could not parse input file.");
+                    throw format_error("Could not parse input file.");
                 }
 
                 // add a new compound with a unique id
