@@ -29,7 +29,7 @@ class MainWidget : public QWidget {
     using kcomp = kanji_data::kanji_compound;
 public:
     explicit MainWidget(std::string fileName = "", QWidget *parent = nullptr);
-    ~MainWidget();
+    virtual ~MainWidget() override;
 
 signals:
     /*!

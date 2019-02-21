@@ -31,7 +31,7 @@ public:
      */
     explicit KanjiListWidget(QVector<kcomp> kanji,
                              QWidget *parent = nullptr);
-    ~KanjiListWidget();
+    virtual ~KanjiListWidget() override;
 
     int detailPageId; /*!< Id link of the detail page for detailPageRequested() signal */
     int addPageId; /*!< Id link of the add page for addPageRequested() signal */

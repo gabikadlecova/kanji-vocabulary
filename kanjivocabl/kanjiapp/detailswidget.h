@@ -20,7 +20,7 @@ class DetailsWidget : public QWidget
 
 public:
     explicit DetailsWidget(QWidget *parent = nullptr);
-    ~DetailsWidget();
+    virtual ~DetailsWidget() override;
 
     int editPageId; /*!< Id link of the edit page for editPageRequested() signal */
 

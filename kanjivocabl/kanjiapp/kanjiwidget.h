@@ -20,7 +20,7 @@ class KanjiWidget : public QWidget
 
 public:
     explicit KanjiWidget(QStackedWidget *st, QWidget *parent = nullptr);
-    ~KanjiWidget();
+    virtual ~KanjiWidget() override;
 
     /*!
      * \brief addWidget Adds a widget to the menu

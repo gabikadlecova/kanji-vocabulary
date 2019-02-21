@@ -22,7 +22,7 @@ public:
      * \param parent QObject parent
      */
     LibManip(std::string defaultName = "", QWidget *parent = nullptr);
-    ~LibManip() = default;
+    virtual ~LibManip() override = default;
 
 signals:
     /*!

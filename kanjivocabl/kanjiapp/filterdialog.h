@@ -22,7 +22,7 @@ class FilterDialog : public QDialog
 
 public:
     explicit FilterDialog(QWidget *parent = nullptr);
-    ~FilterDialog();
+    virtual ~FilterDialog() override;
 
     /*!
      * \brief The FilterMode enum represents different filter criteria.

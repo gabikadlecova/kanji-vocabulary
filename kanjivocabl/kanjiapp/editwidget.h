@@ -23,7 +23,7 @@ class EditWidget : public QWidget
 
 public:
     explicit EditWidget(QWidget *parent = nullptr);
-    ~EditWidget();
+    virtual ~EditWidget() override;
 
 signals:
     /*!
