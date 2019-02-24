@@ -9,6 +9,7 @@
 #include <QLineEdit>
 #include <QGridLayout>
 
+
 namespace Ui {
 class FilterDialog;
 }
