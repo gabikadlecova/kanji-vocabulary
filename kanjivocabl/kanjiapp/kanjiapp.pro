@@ -35,7 +35,9 @@ SOURCES += \
     kanjiapp/KanjiData.cpp \
     addkanjiwidget.cpp \
     filterdialog.cpp \
-    kanjiapp/iolib.cpp
+    kanjiapp/iolib.cpp \
+    kanjiapp/kanjifilter.cpp \
+    settingsdialog.cpp
 
 HEADERS += \
         kanjiwidget.h \
@@ -47,7 +49,9 @@ HEADERS += \
     kanjiapp/KanjiData.h \
     addkanjiwidget.h \
     filterdialog.h \
-    kanjiapp/iolib.h
+    kanjiapp/iolib.h \
+    kanjiapp/kanjifilter.h \
+    settingsdialog.h
 
 FORMS += \
         kanjiwidget.ui \
@@ -57,7 +61,8 @@ FORMS += \
     kanjilistwidget.ui \
     mainwidget.ui \
     addkanjiwidget.ui \
-    filterdialog.ui
+    filterdialog.ui \
+    settingsdialog.ui
 
 CONFIG += mobility
 MOBILITY = 

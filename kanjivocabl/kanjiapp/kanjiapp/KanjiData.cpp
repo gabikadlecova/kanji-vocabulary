@@ -23,10 +23,8 @@ namespace kanji_data {
             level_ = level_ * 2;
         }
         else {
-            if (level_ == 1) {
-                return;
-            }
-            level_ = level_ / 2;
+            // repeat as soon as possible
+            level_ = 1;
         }
     }
 
@@ -95,59 +93,54 @@ namespace kanji_data {
     }
 
     // filters by kanji characters
-    std::vector<kanji_compound> by_kanji(const kanji_lib &lib, const std::wstring &k) {
+    const_kanji_it by_kanji(const_kanji_it begin, const_kanji_it end,
+                            const std::wstring &k) {
 
-        std::vector<kanji_compound> kanji_k;
-
-        // all compounds that contain the kanji string
-        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                     std::back_inserter(kanji_k),
-                     [&](const kanji_compound &kc) {
+        auto it = std::find_if(begin, end,
+                    [&](const kanji_compound &kc) {
             return kc.get_kanji().find(k) != std::wstring::npos;
         });
 
-        return kanji_k;
+        return it;
     }
 
     // filters by meaning
-    std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::wstring &m) {
+    const_kanji_it by_meaning(const_kanji_it begin, const_kanji_it end,
+                                           const std::wstring &m) {
 
-        std::vector<kanji_compound> kanji_k;
-        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                     std::back_inserter(kanji_k),
+        auto it = std::find_if(begin, end,
                      [&](const kanji_compound &kc) {
             return kc.meaning.find(m) != std::wstring::npos;
         });
 
-        return kanji_k;
+        return it;
     }
 
     // filters by reading
-    std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r) {
+    const_kanji_it by_reading(const_kanji_it begin, const_kanji_it end,
+                                           const std::wstring &r) {
 
-        std::vector<kanji_compound> kanji_k;
-        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                     std::back_inserter(kanji_k),
+        auto it = std::find_if(begin, end,
                      [&](const kanji_compound &kc) {
             return kc.reading.find(r) != std::wstring::npos;
         });
 
-        return kanji_k;
+        return it;
     }
 
     // compounds which can be repeated "now"
-    std::vector<kanji_compound> due_today(const kanji_lib &lib) {
+    const_kanji_it due_today(const_kanji_it begin, const_kanji_it end) {
 
-        std::vector<kanji_compound> kanji_k;
-        std::copy_if(lib.get_kanji().begin(), lib.get_kanji().end(),
-                     std::back_inserter(kanji_k), [&](const kanji_compound &kc) {
+        auto it = std::find_if(begin, end,
+                               [&](const kanji_compound &kc) {
 
             // last repetition must have been at least kc.get_level() days ago
             time t = kc.get_last_rep() + std::chrono::hours(kc.get_level() * 24);
+
             return t <= std::chrono::system_clock::now();
         });
 
-        return kanji_k;
+        return it;
     }
 
     // reads library from the input stream

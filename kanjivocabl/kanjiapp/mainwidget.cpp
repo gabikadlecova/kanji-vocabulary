@@ -1,6 +1,8 @@
 #include "mainwidget.h"
 #include "ui_mainwidget.h"
 
+#include "kanjiapp/kanjifilter.h"
+
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 #include "trainwidget.h"
@@ -189,7 +191,7 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 {  
     using Mode = FilterDialog::FilterMode;
 
-    std::vector<kcomp> filterRes;
+    QVector<kcomp> filterRes;
 
     // empty string means no data
     if (fm != Mode::none && filterVal == "") {
@@ -199,42 +201,36 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 
     // filter the library
     switch (fm) {
-        case Mode::byKanji:
-            filterRes = kanji_data::by_kanji(lib, filterVal.toStdWString());
-            break;
-
-        case Mode::byReading:
-            filterRes = kanji_data::by_reading(lib, filterVal.toStdWString());
-            break;
-
-        case Mode::byMeaning:
-            filterRes = kanji_data::by_meaning(lib, filterVal.toStdWString());
-            break;
-
         case Mode::none:
             emit filterReset();
             return;
+
+        case Mode::byKanji:
+        case Mode::byReading:
+        case Mode::byMeaning:
+            filterRes = get_filtered(lib, fm, filterVal);
+            break;
 
         // if there were a new enum value added, error
         default:
             throw std::logic_error("Invalid filter mode.");
     }
 
-    emit kanjiFiltered(QVector<kcomp>::fromStdVector(std::move(filterRes)));
+    emit kanjiFiltered(std::move(filterRes));
 }
 
 
 // fetches available training data
 void MainWidget::onTrainingRequested()
 {
-    auto trainKanji = kanji_data::due_today(lib);
+    auto trainKanji = get_due_today(lib);
 
     emit trainingDataChanged(std::move(trainKanji));
 }
 
 
 // updates kanji compounds with training results
-void MainWidget::onTrainingSubmitted(const std::vector<kcomp> &trainedKanji)
+void MainWidget::onTrainingSubmitted(const QVector<kcomp> &trainedKanji)
 {
     std::for_each(trainedKanji.begin(), trainedKanji.end(), [=](const kcomp &kc){
         lib.update_kanji(kc);

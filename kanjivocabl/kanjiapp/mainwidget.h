@@ -82,7 +82,7 @@ signals:
      * \brief trainingDataChanged Provides training data.
      * \param trainKanji Kanji compounds which are to be trained.
      */
-    void trainingDataChanged(std::vector<kcomp> trainKanji);
+    void trainingDataChanged(QVector<kcomp> trainKanji);
 
     /*!
      * \brief dataSaved Signalizes that the library should be saved.
@@ -146,7 +146,7 @@ private slots:
      * \brief onTrainingSubmitted Is called when modified training data is submitted.
      * \param trainedKanji Repeated kanji compounds.
      */
-    void onTrainingSubmitted(const std::vector<kcomp> &trainedKanji);
+    void onTrainingSubmitted(const QVector<kcomp> &trainedKanji);
     /*!
      * \brief onTrainingFinished Is called when the training was finished.
      * In this slot, modifications of the training data are not handled.

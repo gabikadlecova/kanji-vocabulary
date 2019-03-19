@@ -229,6 +229,8 @@ namespace kanji_data
         virtual ~missing_error() = default;
     };
 
+    using const_kanji_it = std::vector<kanji_compound>::const_iterator;
+
     /*!
      * \brief by_kanji Filters the library according to kanji characters.
      * \param lib Library to be searched.
@@ -237,7 +239,8 @@ namespace kanji_data
      * Searches the library for all compounds, whose kanji string contains \p k as
      * its substring.
      */
-    std::vector<kanji_compound> by_kanji(const kanji_lib &lib, const std::wstring &k);
+    const_kanji_it by_kanji(const_kanji_it begin, const_kanji_it end,
+                            const std::wstring &k);
     /*!
      * \brief by_kanji Filters the library according to meaning of a compound.
      * \param lib Library to be searched.
@@ -246,7 +249,8 @@ namespace kanji_data
      * Searches the library for all compounds, whose meaning contains \p m as
      * its substring.
      */
-    std::vector<kanji_compound> by_meaning(const kanji_lib &lib, const std::wstring &m);
+    const_kanji_it by_meaning(const_kanji_it begin, const_kanji_it end,
+                              const std::wstring &m);
     /*!
      * \brief by_kanji Filters the library according to the reading of a compound.
      * \param lib Library to be searched.
@@ -255,7 +259,8 @@ namespace kanji_data
      * Searches the library for all compounds, whose reading contains \p r as
      * its substring.
      */
-    std::vector<kanji_compound> by_reading(const kanji_lib &lib, const std::wstring &r);
+    const_kanji_it by_reading(const_kanji_it begin, const_kanji_it end,
+                              const std::wstring &r);
     /*!
      * \brief due_today Searches the library for all compounds which are to be repeated.
      * \param lib Library to be searched.
@@ -263,7 +268,7 @@ namespace kanji_data
      * Searches the library for all kanji, which were last repeated before
      * kanji_compound::level_ days.
      */
-    std::vector<kanji_compound> due_today(const kanji_lib &lib);
+    const_kanji_it due_today(const_kanji_it begin, const_kanji_it end);
 
     /*!
      * \brief empty_lib Creates a library with no kanji compounds added.

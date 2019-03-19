@@ -79,7 +79,7 @@ signals:
      * \brief trainingEnded Ends the current training and submits the results.
      * \param result Repeated kanji.
      */
-    void trainingEnded(const std::vector<kcomp> &result);
+    void trainingEnded(const QVector<kcomp> &result);
     /*!
      * \brief trainingDiscarded Ends the current training and discards all changes.
      */
@@ -90,7 +90,7 @@ public slots:
      * \brief onTrainKanjiSet Loads a new training set of compounds.
      * \param newTraining New compounds to be trained.
      */
-    void onTrainKanjiSet(std::vector<kcomp> newTraining);
+    void onTrainKanjiSet(QVector<kcomp> newTraining);
 
 private slots:
     /*!
@@ -171,12 +171,12 @@ private:
     QPushButton *flipButton; /*!< Flips the flashcard. */
     QSplitter *feedbackSplitter; /*!< Training buttons for selecting a response. */
 
-    std::vector<kcomp> trainKanji; /*!< Unchanged input kanji data. */
-    std::vector<kcomp> resKanji; /*!< Result kanji; all changes are made here. */
-    std::vector<kcomp::kanji_id> history; /*!< Repetition history; enables "go back". */
+    QVector<kcomp> trainKanji; /*!< Unchanged input kanji data. */
+    QVector<kcomp> resKanji; /*!< Result kanji; all changes are made here. */
+    QVector<kcomp::kanji_id> history; /*!< Repetition history; enables "go back". */
     std::set<kcomp::kanji_id> validId; /*!< Kanji compounds which need to be repeated. */
 
-    std::vector<kcomp>::iterator currKanji;
+    QVector<kcomp>::iterator currKanji;
 
     bool flipped = false; /*!< Indicates whether the flashcard is flipped. */
 

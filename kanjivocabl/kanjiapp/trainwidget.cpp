@@ -21,7 +21,7 @@ TrainWidget::~TrainWidget()
 
 
 // sets a new training set
-void TrainWidget::onTrainKanjiSet(std::vector<kcomp> newTraining)
+void TrainWidget::onTrainKanjiSet(QVector<kcomp> newTraining)
 {
     trainKanji = std::move(newTraining);
 
