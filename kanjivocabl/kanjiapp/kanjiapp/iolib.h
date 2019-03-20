@@ -5,6 +5,34 @@
 
 #include "kanjiapp/KanjiData.h"
 
+
+class Settings
+{
+public:
+    Settings():
+        defaultPath(""),
+        kanjiPerRep(30),
+        maxLevel(30),
+        multiplier(2)
+    {}
+
+    Settings(std::string path,
+             std::uint_least32_t perRep,
+             kanji_data::kanji_compound::kanji_level lev,
+             std::uint_least32_t mult):
+        defaultPath(path),
+        kanjiPerRep(perRep),
+        maxLevel(lev),
+        multiplier(mult)
+    {}
+
+    std::string defaultPath;
+    std::uint_least32_t kanjiPerRep;
+
+    kanji_data::kanji_compound::kanji_level maxLevel;
+    std::uint_least32_t multiplier;
+};
+
 /*!
  * \brief The LibManip class provides methods for data loading and saving.
  * The LibManip class loads data from and saves data to a file. The file path
@@ -21,7 +49,7 @@ public:
      * \param defaultName Default load and save path
      * \param parent QObject parent
      */
-    LibManip(std::string defaultName = "", QWidget *parent = nullptr);
+    LibManip(std::string settingsPath, QWidget *parent = nullptr);
     virtual ~LibManip() override = default;
 
 signals:
@@ -43,11 +71,18 @@ signals:
      */
     void noLoadFileSelected();
 
+    /*!
+     * \brief settingsLoaded Signals that app settings have been loaded.
+     * \param s The loaded app settings.
+     */
+    void settingsLoaded(Settings &s);
+
 public slots:
     /*!
      * \brief onLoadData Handler for data load requests.
      * Opens a QFileDialog for file selection, loads data from the specified file.
-     * Emits loadFailed() and noLoadFileSelected() on failure, dataLoaded() on success.
+     * Emits loadFailed() and noLoadFileSelected() on failure, settingsLoaded() on
+     * success.
      */
     void onLoadData();
     /*!
@@ -57,18 +92,33 @@ public slots:
      * to enable save path selection.
      * Emits noSaveFileSelected() on failure.
      */
-    void onSaveData(const kanji_data::kanji_lib &lib);
+    void onSaveData(const kanji_data::kanji_lib &lib, bool def);
+
+    /*!
+     * \brief onLoadData Handler for settings load requests.
+     * Opens a QFileDialog for file selection, loads data from the specified file.
+     * Emits loadFailed() and noLoadFileSelected() on failure, dataLoaded() on success.
+     */
+    void onLoadSettings();
+    void onSaveSettings(bool def);
 
 public:
     /*!
      * \brief readLib Reads data from the #fileName path.
      */
-    void readLib();
+    void readLib(std::string fname);
+
+    /*!
+     * \brief readSettings Reads settings from the #settingsName path.
+     */
+    void readSettings(std::string fname);
 
 private:
     QWidget *parent;
 
-    std::string fileName; /*!< Default load and save path. */
+    std::string filePath;
+    std::string settingsPath;
+    Settings s;
 };
 
 #endif // IOLIB_H

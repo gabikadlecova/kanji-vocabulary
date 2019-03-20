@@ -11,16 +11,17 @@
 namespace kanji_data {
 
     // changes kanji level and time
-    void kanji_compound::repeat(bool succeeded) {
+    void kanji_compound::repeat(bool succeeded, kanji_level max_level,
+                                std::int_least8_t multiplier) {
         // sets time to "now"
         last_rep_ = std::chrono::system_clock::now();
 
-        // halfes or doubles the level (not exceeding the limits)
+        // increases the repetition level or resets it
         if (succeeded) {
-            if (level_ == max_level) {
+            if (level_ < max_level) {
                 return;
             }
-            level_ = level_ * 2;
+            level_ = level_ * multiplier;
         }
         else {
             // repeat as soon as possible

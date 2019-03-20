@@ -1,29 +1,48 @@
 #include "iolib.h"
 
 #include <QFileDialog>
+#include <QMessageBox>
 
 #include <fstream>
 #include <codecvt>
 #include <iostream>
+#include <string>
+
+
+bool saveToDefault()
+{
+    QMessageBox defBox;
+    defBox.setText("Set to default");
+    defBox.setInformativeText("Do you want to set the path as the default path?");
+    defBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+
+    auto res = defBox.exec();
+    return res == QMessageBox::Yes;
+}
+
 
 // Construct LibManip. If the parameter isn't an empty string,
 // LibManip::readLib() or LibManip::onSaveData() can be called immediately to load
 // or save data respectively.
-LibManip::LibManip(std::string fileName, QWidget *parent) :
+LibManip::LibManip(std::string settingsPath, QWidget *parent) :
     QObject(parent),
-    fileName(fileName)
+    settingsPath(std::move(settingsPath))
 {
     this->parent = parent;
+
+    readSettings(settingsPath);
+    filePath = s.defaultPath;
 }
 
 
 // Saves data to path LibManip::fileName or opens a QFileDialog for
 // path selection. If the dialog is dismissed, LibManip::noSaveFileName()
 // is emitted. The data till be encoded in utf8.
-void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
+void LibManip::onSaveData(const kanji_data::kanji_lib &lib, bool def)
 {
+    std::string path = filePath;
     // select file for saving
-    if (fileName == "") {
+    if (!def || filePath == "") {
         auto fname = QFileDialog::getSaveFileName(this->parent, "Save kanji data");
 
         if (fname == "") {
@@ -31,11 +50,15 @@ void LibManip::onSaveData(const kanji_data::kanji_lib &lib)
             return;
         }
 
-        fileName = fname.toStdString();
+        path = fname.toStdString();
+
+        if (saveToDefault()) {
+            s.defaultPath = fname.toStdString();
+        }
     }
 
     // save to file
-    std::wofstream wos{ fileName };
+    std::wofstream wos{ path };
     wos.imbue(std::locale(std::locale::empty(),
                           new std::codecvt_utf8<wchar_t, 0x10ffff, std::consume_header>));
 
@@ -55,9 +78,11 @@ void LibManip::onLoadData()
         return;
     }
 
-    fileName = fname.toStdString();
+    readLib(fname.toStdString());
 
-    readLib();
+    if (saveToDefault()){
+        s.defaultPath = fname.toStdString();
+    }
 
 }
 
@@ -65,9 +90,9 @@ void LibManip::onLoadData()
 // Loads data from the path LibManip::fileName.
 // The data is expected to be in utf8. Emits LibManip::dataLoaded() on
 // success and LibManip::loadFailed() on failure.
-void LibManip::readLib()
+void LibManip::readLib(std::string fname)
 {
-    std::wifstream wis{ fileName };
+    std::wifstream wis{ fname };
     wis.imbue(std::locale(std::locale::empty(),
                           new std::codecvt_utf8<wchar_t, 0x10ffff, std::consume_header>));
 
@@ -83,4 +108,73 @@ void LibManip::readLib()
         emit loadFailed();
         return;
     }
+}
+
+void LibManip::onLoadSettings()
+{
+    auto fname = QFileDialog::getOpenFileName(this->parent, "Load settings");
+
+    if (fname == "") {
+        emit noLoadFileSelected();
+        return;
+    }
+
+    readSettings(fname.toStdString());
+
+    // msgbox result
+    if (saveToDefault()){
+        onSaveSettings(true);
+    }
+}
+
+void LibManip::onSaveSettings(bool def)
+{
+    std::string path = settingsPath;
+    if (!def) {
+        auto fname = QFileDialog::getSaveFileName(this->parent, "Save settings");
+
+        if (fname == "") {
+            emit noSaveFileSelected();
+            return;
+        }
+
+        path = fname.toStdString();
+    }
+
+    std::ofstream os{ path };
+
+    os << s.defaultPath << std::endl;
+    os << s.kanjiPerRep << std::endl;
+    os << s.maxLevel << std::endl;
+    os << s.multiplier << std::endl;
+
+}
+
+void LibManip::readSettings(std::string fname)
+{
+    std::ifstream is{ fname };
+
+    if (is.bad()) {
+        emit loadFailed();
+    }
+
+    // todo check validity
+
+    std::string defPath;
+    std::getline(is, defPath);
+
+    std::string kanjiPerRepStr;
+    std::getline(is, kanjiPerRepStr);
+    std::uint_least32_t kanjiPerRep = std::stoul(kanjiPerRepStr);
+
+    std::string maxLevelStr;
+    std::getline(is, maxLevelStr);
+    kanji_data::kanji_compound::kanji_level maxLevel = std::stoi(maxLevelStr);
+
+    std::string multiplierStr;
+    std::getline(is, multiplierStr);
+
+    std::uint_least32_t multiplier = std::stoul(multiplierStr);
+
+    s = Settings(defPath, kanjiPerRep, maxLevel, multiplier);
 }

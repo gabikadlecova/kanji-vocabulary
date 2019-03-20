@@ -83,7 +83,7 @@ namespace kanji_data
          * If the training succeeds, the level is doubled, else it is halved.
          * The level does not go below 1 and does not exceed #max_level
          */
-		void repeat(bool succeeded);
+        void repeat(bool succeeded, kanji_level max_level, std::int_least8_t multiplier);
         /*!
          * \brief reset_time Sets the time of the last repetition to "now".
          */
@@ -110,7 +110,6 @@ namespace kanji_data
 		kanji_id id_;
 		std::wstring kanji_str_;
 
-        static const kanji_level max_level = 32; /*!< Maximum level of the compound. */
 		time last_rep_;
 		kanji_level level_;
 	};
