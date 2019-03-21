@@ -17,9 +17,9 @@ public:
     {}
 
     Settings(std::string path,
-             std::uint_least32_t perRep,
+             int perRep,
              kanji_data::kanji_compound::kanji_level lev,
-             std::uint_least32_t mult):
+             std::int_least8_t mult):
         defaultPath(path),
         kanjiPerRep(perRep),
         maxLevel(lev),
@@ -27,10 +27,10 @@ public:
     {}
 
     std::string defaultPath;
-    std::uint_least32_t kanjiPerRep;
+    int kanjiPerRep;
 
     kanji_data::kanji_compound::kanji_level maxLevel;
-    std::uint_least32_t multiplier;
+    int_least8_t multiplier;
 };
 
 /*!
@@ -51,6 +51,8 @@ public:
      */
     LibManip(std::string settingsPath, QWidget *parent = nullptr);
     virtual ~LibManip() override = default;
+
+    Settings s;
 
 signals:
     /*!
@@ -75,7 +77,7 @@ signals:
      * \brief settingsLoaded Signals that app settings have been loaded.
      * \param s The loaded app settings.
      */
-    void settingsLoaded(Settings &s);
+    void settingsLoaded(Settings s);
 
 public slots:
     /*!
@@ -100,7 +102,7 @@ public slots:
      * Emits loadFailed() and noLoadFileSelected() on failure, dataLoaded() on success.
      */
     void onLoadSettings();
-    void onSaveSettings(bool def);
+    void onSaveSettings(Settings s, bool def);
 
 public:
     /*!
@@ -118,7 +120,6 @@ private:
 
     std::string filePath;
     std::string settingsPath;
-    Settings s;
 };
 
 #endif // IOLIB_H

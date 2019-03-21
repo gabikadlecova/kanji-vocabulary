@@ -30,7 +30,8 @@ LibManip::LibManip(std::string settingsPath, QWidget *parent) :
 {
     this->parent = parent;
 
-    readSettings(settingsPath);
+    readSettings(this->settingsPath);
+
     filePath = s.defaultPath;
 }
 
@@ -120,15 +121,13 @@ void LibManip::onLoadSettings()
     }
 
     readSettings(fname.toStdString());
-
-    // msgbox result
-    if (saveToDefault()){
-        onSaveSettings(true);
-    }
+    emit settingsLoaded(s);
 }
 
-void LibManip::onSaveSettings(bool def)
+void LibManip::onSaveSettings(Settings s, bool def)
 {
+    this->s = s;
+
     std::string path = settingsPath;
     if (!def) {
         auto fname = QFileDialog::getSaveFileName(this->parent, "Save settings");
@@ -146,7 +145,7 @@ void LibManip::onSaveSettings(bool def)
     os << s.defaultPath << std::endl;
     os << s.kanjiPerRep << std::endl;
     os << s.maxLevel << std::endl;
-    os << s.multiplier << std::endl;
+    os << static_cast<int>(s.multiplier) << std::endl;  // avoid writing char
 
 }
 
@@ -154,7 +153,7 @@ void LibManip::readSettings(std::string fname)
 {
     std::ifstream is{ fname };
 
-    if (is.bad()) {
+    if (!is.good()) {
         emit loadFailed();
     }
 
@@ -165,7 +164,7 @@ void LibManip::readSettings(std::string fname)
 
     std::string kanjiPerRepStr;
     std::getline(is, kanjiPerRepStr);
-    std::uint_least32_t kanjiPerRep = std::stoul(kanjiPerRepStr);
+    int kanjiPerRep = std::stoi(kanjiPerRepStr);
 
     std::string maxLevelStr;
     std::getline(is, maxLevelStr);
@@ -174,7 +173,7 @@ void LibManip::readSettings(std::string fname)
     std::string multiplierStr;
     std::getline(is, multiplierStr);
 
-    std::uint_least32_t multiplier = std::stoul(multiplierStr);
+    int_least8_t multiplier = static_cast<int_least8_t>(std::stoi(multiplierStr));
 
     s = Settings(defPath, kanjiPerRep, maxLevel, multiplier);
 }

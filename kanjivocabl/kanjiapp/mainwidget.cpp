@@ -14,9 +14,9 @@
 #include <QMessageBox>
 
 
-MainWidget::MainWidget(std::string fileName, QWidget *parent) :
+MainWidget::MainWidget(std::string settingsName, QWidget *parent) :
     QWidget(parent),
-    lm(new LibManip(fileName, this)),
+    lm(new LibManip(settingsName, this)),
     lib(kanji_data::empty_lib()),
     d(new FilterDialog(this)),
     altMenuSplitter(nullptr),
@@ -46,9 +46,19 @@ MainWidget::MainWidget(std::string fileName, QWidget *parent) :
             this, &MainWidget::onBadFormat);
 
     // load the default library file
-    if (fileName != "") {
-        lm->readLib();
+    if (lm->s.defaultPath != "") {
+        lm->readLib(lm->s.defaultPath);
     }
+
+
+    sd = new SettingsDialog(lm->s, this);
+    connect(sd, &SettingsDialog::settingsSaveRequested,
+            lm, &LibManip::onSaveSettings);
+    connect(sd, &SettingsDialog::settingsLoadRequested,
+            lm, &LibManip::onLoadSettings);
+
+    connect(lm, &LibManip::settingsLoaded,
+            sd, &SettingsDialog::onSettingsLoaded);
 
     setupLayout();
 }
@@ -144,7 +154,7 @@ void MainWidget::onKanjiDeleted(kcomp::kanji_id id)
 {
     // erase from lib
     lib.delete_kanji(id);
-    emit dataSaved(lib);
+    emit dataSaved(lib, true);
 
     // assumes that delete is called from a detail page - should be changed otherwise
     onBackButtonClicked();
@@ -156,7 +166,7 @@ void MainWidget::onKanjiChanged(kcomp kc)
 {
     // update in the lib
     lib.update_kanji(std::move(kc));
-    emit dataSaved(lib);
+    emit dataSaved(lib, true);
 
     // assumes that update is called from a detail page - should be changed otherwise
     onBackButtonClicked();
@@ -171,7 +181,7 @@ void MainWidget::onKanjiAdded(kcomp kc)
         auto new_kc = lib.add_kanji(std::move(kc.get_kanji()),
                                     std::move(kc.reading),
                                     std::move(kc.meaning));
-        emit dataSaved(lib);
+        emit dataSaved(lib, true);
 
         emit kanjiAdded(new_kc);
         onBackButtonClicked();
@@ -223,7 +233,7 @@ void MainWidget::onKanjiFiltered(FilterDialog::FilterMode fm, QString filterVal)
 // fetches available training data
 void MainWidget::onTrainingRequested()
 {
-    auto trainKanji = get_due_today(lib);
+    auto trainKanji = get_due_today(lib, lm->s.kanjiPerRep);
 
     emit trainingDataChanged(std::move(trainKanji));
 }
@@ -235,7 +245,7 @@ void MainWidget::onTrainingSubmitted(const QVector<kcomp> &trainedKanji)
     std::for_each(trainedKanji.begin(), trainedKanji.end(), [=](const kcomp &kc){
         lib.update_kanji(kc);
     });
-    emit dataSaved(lib);
+    emit dataSaved(lib, true);
     emit kanjiLoaded(QVector<kcomp>::fromStdVector(this->lib.get_kanji()));
 
     onTrainingFinished();
@@ -399,7 +409,7 @@ void MainWidget::setupPage() {
 
 
     /* TrainWidget - flashcards */
-    TrainWidget *tw = new TrainWidget();
+    TrainWidget *tw = new TrainWidget(lm->s);
 
     // save trainId - pageStack id
     int trainId = pageStack->count();
@@ -425,6 +435,12 @@ void MainWidget::setupPage() {
     connect(tw, &TrainWidget::trainingDiscarded,
             this, &MainWidget::onTrainingFinished);
 
+
+    // pass settings to train widget
+    connect(lm, &LibManip::settingsLoaded,
+            tw, &TrainWidget::onSettingsLoaded);
+
+
     // custom menu
     connect(tw, &TrainWidget::customMenuShown,
             this, &MainWidget::onCustomMenu);
@@ -438,6 +454,13 @@ void MainWidget::setupPage() {
             lm, &LibManip::onLoadData);
 
     kv->addButton(loadButton);
+
+    /* Settings dialog */
+    QPushButton *settingsButton = new QPushButton("Settings");
+    connect(settingsButton, &QPushButton::clicked,
+            sd, &SettingsDialog::show);
+
+    kv->addButton(settingsButton);
 
     /* FilterDialog - open from kanjiList */
     connect(kanjiList, &KanjiListWidget::filterDialogRequested,

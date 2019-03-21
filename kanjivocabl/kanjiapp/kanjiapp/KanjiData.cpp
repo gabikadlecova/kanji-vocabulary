@@ -18,7 +18,7 @@ namespace kanji_data {
 
         // increases the repetition level or resets it
         if (succeeded) {
-            if (level_ < max_level) {
+            if (level_ >= max_level) {
                 return;
             }
             level_ = level_ * multiplier;

@@ -4,6 +4,7 @@
 #include "kanjiwidget.h"
 #include "kanjilistwidget.h"
 #include "filterdialog.h"
+#include "settingsdialog.h"
 
 #include "kanjiapp/iolib.h"
 #include "kanjiapp/KanjiData.h"
@@ -28,7 +29,7 @@ class MainWidget : public QWidget {
 
     using kcomp = kanji_data::kanji_compound;
 public:
-    explicit MainWidget(std::string fileName = "", QWidget *parent = nullptr);
+    explicit MainWidget(std::string settingsName, QWidget *parent = nullptr);
     virtual ~MainWidget() override;
 
 signals:
@@ -87,8 +88,9 @@ signals:
     /*!
      * \brief dataSaved Signalizes that the library should be saved.
      * \param lib Library that is to be saved.
+     * \param def If true, it is saved to the default path.
      */
-    void dataSaved(const kanji_data::kanji_lib &lib);
+    void dataSaved(const kanji_data::kanji_lib &lib, bool def);
 
 private slots:
     /*!
@@ -189,6 +191,7 @@ private:
     kanji_data::kanji_lib lib; /*!< Provides a list of kanji compounds and CRUD. */
 
     FilterDialog *d; /*!< Provides filtering of the library. */
+    SettingsDialog *sd;
 
     QVBoxLayout *l;
     QLabel *title; /*!< The app title. */

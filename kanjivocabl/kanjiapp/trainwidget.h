@@ -2,6 +2,7 @@
 #define TRAINWIDGET_H
 
 #include "kanjiapp/KanjiData.h"
+#include "kanjiapp/iolib.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -33,7 +34,7 @@ class TrainWidget : public QWidget
     };
 
 public:
-    explicit TrainWidget(QWidget *parent = nullptr);
+    explicit TrainWidget(Settings s, QWidget *parent = nullptr);
     virtual ~TrainWidget() override;
 
 signals:
@@ -91,6 +92,8 @@ public slots:
      * \param newTraining New compounds to be trained.
      */
     void onTrainKanjiSet(QVector<kcomp> newTraining);
+
+    void onSettingsLoaded(Settings s);
 
 private slots:
     /*!
@@ -179,6 +182,8 @@ private:
     QVector<kcomp>::iterator currKanji;
 
     bool flipped = false; /*!< Indicates whether the flashcard is flipped. */
+
+    Settings s;
 
     Ui::TrainWidget *ui;
 };

@@ -41,14 +41,25 @@ QVector<kanji_data::kanji_compound> get_filtered(const kanji_data::kanji_lib &li
 }
 
 
-QVector<kanji_data::kanji_compound> get_due_today(const kanji_data::kanji_lib &lib)
+QVector<kanji_data::kanji_compound> get_due_today(kanji_data::kanji_lib &lib,
+                                                  int maxCount)
 {
     QVector<kanji_data::kanji_compound> res;
 
     auto kanji = lib.get_kanji();
+
+    std::sort(kanji.begin(), kanji.end(),
+              [](kanji_data::kanji_compound kcl, kanji_data::kanji_compound kcr){
+        return kcl.get_level() < kcr.get_level();
+    });
+
     auto it = kanji.cbegin();
 
     while (true) {
+        if (maxCount != -1 && maxCount <= res.size()) {
+            break;
+        }
+
         it = kanji_data::due_today(it, kanji.cend());
 
         if (it == kanji.cend()) {
@@ -56,6 +67,7 @@ QVector<kanji_data::kanji_compound> get_due_today(const kanji_data::kanji_lib &l
         }
 
         res.push_back(*it);
+        it++;
     }
 
     return res;

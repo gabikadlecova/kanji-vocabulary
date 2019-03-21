@@ -22,7 +22,8 @@ QVector<kanji_data::kanji_compound> get_filtered(const kanji_data::kanji_lib &li
  * \param lib Library to be searched.
  * \return A new QVector of filtered kanji.
  */
-QVector<kanji_data::kanji_compound> get_due_today(const kanji_data::kanji_lib &lib);
+QVector<kanji_data::kanji_compound> get_due_today(kanji_data::kanji_lib &lib,
+                                                  int maxCount = -1);
 
 
 #endif // KANJIFILTER_H

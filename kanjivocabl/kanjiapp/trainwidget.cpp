@@ -5,8 +5,9 @@
 
 #include <algorithm>
 
-TrainWidget::TrainWidget(QWidget *parent) :
+TrainWidget::TrainWidget(Settings s,QWidget *parent) :
     QWidget(parent),
+    s(std::move(s)),
     ui(new Ui::TrainWidget)
 {
     ui->setupUi(this);
@@ -32,6 +33,7 @@ void TrainWidget::onTrainKanjiSet(QVector<kcomp> newTraining)
 
     //stack of trained ids
     history.clear();
+    validId.clear();
 
     // initially, all kanji ids are valid (not trained with "yes" or "no")
     std::transform(trainKanji.begin(), trainKanji.end(),
@@ -56,6 +58,13 @@ void TrainWidget::onTrainKanjiSet(QVector<kcomp> newTraining)
     updateRemainingLabel();
     newCycle();
 }
+
+
+void TrainWidget::onSettingsLoaded(Settings s)
+{
+    this->s = std::move(s);
+}
+
 
 
 // flips the flashcard
@@ -84,7 +93,7 @@ void TrainWidget::onResponseSelected(FlipResponse fr)
         });
 
         // "yes" or "no"
-        trainedIt->repeat(fr == FlipResponse::yes);
+        trainedIt->repeat(fr == FlipResponse::yes, s.maxLevel, s.multiplier);
 
         // the compound is repeated only once in a training
         validId.erase(currKanji->get_id());
