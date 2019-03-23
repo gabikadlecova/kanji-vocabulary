@@ -21,6 +21,7 @@ SettingsDialog::~SettingsDialog()
     delete ui;
 }
 
+// loads the settings
 void SettingsDialog::onSettingsLoaded(Settings newSettings)
 {
     s = std::move(newSettings);
@@ -31,24 +32,28 @@ void SettingsDialog::onSettingsLoaded(Settings newSettings)
 }
 
 
+// saves the settings to default path
 void SettingsDialog::onSetDefClicked()
 {
     emit settingsSaveRequested(s, true);
 }
 
 
+// saves the settings to another path
 void SettingsDialog::onSaveClicked()
 {
     emit settingsSaveRequested(s, false);
 }
 
 
+// requests new settings
 void SettingsDialog::onLoadClicked()
 {
     emit settingsLoadRequested();
 }
 
 
+// sets up the layout
 void SettingsDialog::setupLayout()
 {
     l = new QGridLayout();
@@ -65,8 +70,11 @@ void SettingsDialog::setupLayout()
     adjustSize();
 }
 
+
+// sets up the page
 void SettingsDialog::setupContent()
 {
+    // fields
     QLabel *kanjiRepLabel = new QLabel("Compounds per training cycle");
     kanjiPerRep = new QSpinBox();
     kanjiPerRep->setRange(1, 100);
@@ -89,6 +97,7 @@ void SettingsDialog::setupContent()
     connect(multiplier, QOverload<int>::of(&QSpinBox::valueChanged),
             this, [&](int val){ s.multiplier = static_cast<int_least8_t>(val); });
 
+    // add to layout
     l->addWidget(kanjiRepLabel, 0, 0);
     l->addWidget(kanjiPerRep, 0, 1);
 
@@ -99,6 +108,8 @@ void SettingsDialog::setupContent()
     l->addWidget(multiplier, 2, 1);
 }
 
+
+// sets up the form buttons
 void SettingsDialog::setupButtons()
 {
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Save |
@@ -107,13 +118,14 @@ void SettingsDialog::setupButtons()
     QPushButton *saveButton = buttonBox->button(QDialogButtonBox::Save);
     saveButton->setText("Save as");
 
+    // save as
     connect(saveButton, &QPushButton::clicked,
             this, &SettingsDialog::onSaveClicked);
     connect(saveButton, &QPushButton::clicked,
             this, &SettingsDialog::accept);
 
-
-    QPushButton *setDefButton = new QPushButton("Save to default");
+    // save to default
+    QPushButton *setDefButton = new QPushButton("Save as default");
     connect(setDefButton, &QPushButton::clicked,
             this, &SettingsDialog::accept);
     connect(setDefButton, &QPushButton::clicked,
@@ -121,12 +133,14 @@ void SettingsDialog::setupButtons()
 
     buttonBox->addButton(setDefButton, QDialogButtonBox::ButtonRole::AcceptRole);
 
+    // load
     QPushButton *loadButton = new QPushButton("Load settings");
     connect(loadButton, &QPushButton::clicked,
             this, &SettingsDialog::onLoadClicked);
 
     buttonBox->addButton(loadButton, QDialogButtonBox::ButtonRole::ActionRole);
 
+    // cancel
     QPushButton *cancelButton = buttonBox->button(QDialogButtonBox::Cancel);
     connect(cancelButton, &QPushButton::clicked,
             this, &SettingsDialog::reject);

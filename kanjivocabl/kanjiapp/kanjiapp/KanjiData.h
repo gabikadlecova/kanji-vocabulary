@@ -80,7 +80,9 @@ namespace kanji_data
         /*!
          * \brief repeat Changes level according to \p succeeded
          * \param succeeded Determines whether the repetition (training) was successfull.
-         * If the training succeeds, the level is doubled, else it is halved.
+         * \param max_level Maximum compound level.
+         * \param multiplier Level increase multiplier.
+         * If the training succeeds, the level is doubled, else it is reset to 1.
          * The level does not go below 1 and does not exceed #max_level
          */
         void repeat(bool succeeded, kanji_level max_level, std::int_least8_t multiplier);
@@ -231,40 +233,44 @@ namespace kanji_data
     using const_kanji_it = std::vector<kanji_compound>::const_iterator;
 
     /*!
-     * \brief by_kanji Filters the library according to kanji characters.
-     * \param lib Library to be searched.
+     * \brief by_kanji Filters the compounds according to kanji characters.
+     * \param begin Iterator pointing to the first compound of the range.
+     * \param end Iterator pointing after the last compound.
      * \param k Kanji character filter.
-     * \return Vector of kanji compounds which contain \p k.
-     * Searches the library for all compounds, whose kanji string contains \p k as
+     * \return Iterator pointing to the first kanji compound which contains \p k.
+     * Searches the range for a compound, whose kanji string contains \p k as
      * its substring.
      */
     const_kanji_it by_kanji(const_kanji_it begin, const_kanji_it end,
                             const std::wstring &k);
     /*!
-     * \brief by_kanji Filters the library according to meaning of a compound.
-     * \param lib Library to be searched.
+     * \brief by_kanji Filters the compounds according to meaning of a compound.
+     * \param begin Iterator pointing to the first compound of the range.
+     * \param end Iterator pointing after the last compound.
      * \param m Meaning filter.
-     * \return Vector of kanji compounds whose meanings contain \p m.
-     * Searches the library for all compounds, whose meaning contains \p m as
+     * \return Iterator pointing to the first compound whose meaning contains \p m.
+     * Searches the range for a compound, whose meaning contains \p m as
      * its substring.
      */
     const_kanji_it by_meaning(const_kanji_it begin, const_kanji_it end,
                               const std::wstring &m);
     /*!
-     * \brief by_kanji Filters the library according to the reading of a compound.
-     * \param lib Library to be searched.
+     * \brief by_kanji Filters the compounds according to the reading of a compound.
+     * \param begin Iterator pointing to the first compound of the range.
+     * \param end Iterator pointing after the last compound.
      * \param r Reading filter.
-     * \return Vector of kanji compounds whose readings contain \p r.
-     * Searches the library for all compounds, whose reading contains \p r as
+     * \return  Iterator pointing to the first compound whose reading contains \p r.
+     * Searches the library for a compound, whose reading contains \p r as
      * its substring.
      */
     const_kanji_it by_reading(const_kanji_it begin, const_kanji_it end,
                               const std::wstring &r);
     /*!
-     * \brief due_today Searches the library for all compounds which are to be repeated.
-     * \param lib Library to be searched.
-     * \return Vector of compounds which should be repeated now.
-     * Searches the library for all kanji, which were last repeated before
+     * \brief due_today Searches the compounds for those which can be repeated.
+     * \param begin Iterator pointing to the first compound of the range.
+     * \param end Iterator pointing after the last compound.
+     * \return Iterator pointing to the first compound which can be repeated.
+     * Searches the range for a compound which was last repeated before
      * kanji_compound::level_ days.
      */
     const_kanji_it due_today(const_kanji_it begin, const_kanji_it end);

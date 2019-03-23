@@ -1,5 +1,7 @@
 #include "kanjifilter.h"
 
+
+// filters the kanji library
 QVector<kanji_data::kanji_compound> get_filtered(const kanji_data::kanji_lib &lib,
                                                  FilterDialog::FilterMode mode,
                                                  const QString &val)
@@ -10,6 +12,7 @@ QVector<kanji_data::kanji_compound> get_filtered(const kanji_data::kanji_lib &li
     auto kanji = lib.get_kanji();
     auto it = kanji.cbegin();
 
+    // retrieve compounds according to the filter
     using Mode = FilterDialog::FilterMode;
     while (true) {
         switch (mode) {
@@ -30,17 +33,21 @@ QVector<kanji_data::kanji_compound> get_filtered(const kanji_data::kanji_lib &li
                 break;
         }
 
+        // all compounds filtered
         if (it == kanji.cend()) {
             break;
         }
 
+        // add next compound
         res.push_back(*it);
+        it++;
     }
 
     return res;
 }
 
 
+// get compounds which can be repeated today
 QVector<kanji_data::kanji_compound> get_due_today(kanji_data::kanji_lib &lib,
                                                   int maxCount)
 {
@@ -48,18 +55,10 @@ QVector<kanji_data::kanji_compound> get_due_today(kanji_data::kanji_lib &lib,
 
     auto kanji = lib.get_kanji();
 
-    std::sort(kanji.begin(), kanji.end(),
-              [](kanji_data::kanji_compound kcl, kanji_data::kanji_compound kcr){
-        return kcl.get_level() < kcr.get_level();
-    });
-
     auto it = kanji.cbegin();
 
+    // find all kanji which can be repeated
     while (true) {
-        if (maxCount != -1 && maxCount <= res.size()) {
-            break;
-        }
-
         it = kanji_data::due_today(it, kanji.cend());
 
         if (it == kanji.cend()) {
@@ -70,6 +69,16 @@ QVector<kanji_data::kanji_compound> get_due_today(kanji_data::kanji_lib &lib,
         it++;
     }
 
-    return res;
+    // get up to maxCount compounds
+    std::sort(res.begin(), res.end(),
+              [](kanji_data::kanji_compound kcl, kanji_data::kanji_compound kcr){
+        return kcl.get_level() < kcr.get_level();
+    });
+
+    if (maxCount < 0 || maxCount >= res.size()) {
+        return res;
+    }
+
+    return res.mid(0, maxCount);
 }
 

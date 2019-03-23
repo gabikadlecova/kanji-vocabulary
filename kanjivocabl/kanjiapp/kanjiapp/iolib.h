@@ -6,6 +6,9 @@
 #include "kanjiapp/KanjiData.h"
 
 
+/*!
+ * \brief The Settings class Represents settings of the app.
+ */
 class Settings
 {
 public:
@@ -102,6 +105,11 @@ public slots:
      * Emits loadFailed() and noLoadFileSelected() on failure, dataLoaded() on success.
      */
     void onLoadSettings();
+    /*!
+     * \brief onSaveSettings Saves settings to default path or enables selection.
+     * \param s Settings to be saved.
+     * \param def Indicates whether it is saved to the default path.
+     */
     void onSaveSettings(Settings s, bool def);
 
 public:

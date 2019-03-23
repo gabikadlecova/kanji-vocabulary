@@ -111,6 +111,8 @@ void LibManip::readLib(std::string fname)
     }
 }
 
+
+// loads settings
 void LibManip::onLoadSettings()
 {
     auto fname = QFileDialog::getOpenFileName(this->parent, "Load settings");
@@ -124,6 +126,8 @@ void LibManip::onLoadSettings()
     emit settingsLoaded(s);
 }
 
+
+// saves settings
 void LibManip::onSaveSettings(Settings s, bool def)
 {
     this->s = s;
@@ -149,6 +153,8 @@ void LibManip::onSaveSettings(Settings s, bool def)
 
 }
 
+
+// reads settings from the file
 void LibManip::readSettings(std::string fname)
 {
     std::ifstream is{ fname };
@@ -157,7 +163,7 @@ void LibManip::readSettings(std::string fname)
         emit loadFailed();
     }
 
-    // todo check validity
+    // settings load
 
     std::string defPath;
     std::getline(is, defPath);

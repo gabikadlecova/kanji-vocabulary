@@ -51,6 +51,7 @@ MainWidget::MainWidget(std::string settingsName, QWidget *parent) :
     }
 
 
+    // initialize setting dialog
     sd = new SettingsDialog(lm->s, this);
     connect(sd, &SettingsDialog::settingsSaveRequested,
             lm, &LibManip::onSaveSettings);
