@@ -19,9 +19,11 @@ namespace kanji_data {
         // increases the repetition level or resets it
         if (succeeded) {
             if (level_ >= max_level) {
+                level_ = max_level;
                 return;
             }
             level_ = level_ * multiplier;
+            level_ = std::min(level_, max_level);
         }
         else {
             // repeat as soon as possible
